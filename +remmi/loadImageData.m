@@ -23,11 +23,11 @@ if nargin<1
     end
 end
 
+% what vendor is the study?
+study = remmi.vendors.autoVendor(spath);
+
 if nargin<2
-    dirs = dir(spath);
-    exps = {dirs.name};
-    mask = ([dirs.isdir]==1) & (~strncmpi(exps,'.',1));
-    exps = listdlg('ListString',exps(mask));
+    exps = listdlg('ListString',study.list());
     if isempty(exps)
         error('No experiments specified in %s',spath);
     end
@@ -37,12 +37,9 @@ if ~iscell(exps)
     exps = num2cell(exps);
 end
 
-% what vendor is the study?
-loader = remmi.vendors.autoLoader(spath);
-
 % load all the datasets
 for n=1:length(exps)
-    [dset(n).img,dset(n).pars] = loader(num2str(exps{n}));
+    [dset(n).img,dset(n).pars] = study.load(num2str(exps{n}));
 end
 
 if length(exps)>1

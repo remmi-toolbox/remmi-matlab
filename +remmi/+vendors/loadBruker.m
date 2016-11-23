@@ -1,6 +1,6 @@
-function [img,pars] = loadBruker(dataPath)
-% [img,pars] = loadBruker(dataPath)
-% loads raw data files from Bruker acquisitions
+function img = loadBruker(dataPath)
+% img = loadBruker(dataPath)
+% loads raw data from Bruker acquisitions & reconstructs images 
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
@@ -17,8 +17,6 @@ fclose(fid);
 methpath = fullfile(dataPath,'method');
 methpars = remmi.vendors.parsBruker(methpath);
 
-acqpath = fullfile(dataPath,'acqp');
-acqpars = remmi.vendors.parsBruker(acqpath);
 
 if isfield(methpars,'PVM_RareFactor')
     rarefactor = methpars.PVM_RareFactor;
@@ -70,30 +68,4 @@ if encmatrix(3) > 1
 end
 img = fftshift(fftshift(fftshift(img,1),2),3);
 
-% set the basic remmi experimental parameters
-pars.te = echotimes;
-pars.nte = methpars.PVM_NEchoImages;
-pars.tr = methpars.PVM_RepetitionTime;
-if isfield(methpars,'InversionTime')
-    pars.ti = methpars.InversionTime;
-end
-if isfield(methpars,'RepetitionDelayTime')
-    pars.td = methpars.RepetitionDelayTime;
-end
-pars.vendor = 'Bruker';
-pars.sequence = methpars.Method;
-
-val = acqpars.ACQ_time;
-if ~strcmp(val,'na')
-    try
-        val = datenum(val,'HH:MM:SSddmmmyyyy');
-    catch 
-        val = 0;
-    end
-end
-pars.time = val;
-
-% store all the other parameters, in case someone needs them
-pars.methpars = methpars;
-pars.acqpars = acqpars;
 

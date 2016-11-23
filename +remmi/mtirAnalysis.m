@@ -37,6 +37,7 @@ mtirSet.T1 = zeros(size(mask));
 mtirSet.ci = cell(size(mask));
 
 lb = [0 0 0 0 -1];
+ub = [inf inf inf inf 1];
 
 tot_evals = sum(mask(:));
 evals = 0;
@@ -56,7 +57,7 @@ for ro=1:size(dset.img,1)
                 
                 % fit the data
                 opts = optimset('display','off');
-                [b,~,res,~,~,~,jac] = lsqnonlin(@remmi.util.sirfit_td,b0,lb,[],opts,ti',sig,td,1);
+                [b,~,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
                 
                 % load the dataset
                 mtirSet.M0a(ro,pe,sl)=b(1);
