@@ -36,9 +36,6 @@ mtirSet.kmf = zeros(size(mask));
 mtirSet.T1 = zeros(size(mask));
 mtirSet.ci = cell(size(mask));
 
-lb = [0 0 0 0 -1];
-ub = [inf inf inf inf 1];
-
 tot_evals = sum(mask(:));
 evals = 0;
 
@@ -52,20 +49,28 @@ for ro=1:size(dset.img,1)
                 
                 sig = squeeze(abs(dset.img(ro,pe,sl,:)));
 
-                % initial guess for soft IR, alpha = 0.8
-                b0 = [max(sig)/2, max(sig)/3,10,2,-0.9]; 
+                % initial guess & bounds
+                b0 = [max(sig), max(sig)/10,        50,   2, -0.9]; 
+                lb = [       0,           0,         2,   0,  -1];
+                ub = [     inf,         inf, 1/min(ti), inf,   1];
                 
                 % fit the data
                 opts = optimset('display','off');
-                [b,~,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
+                [b,resnorm,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
+                %b
+                
+                semilogx(ti,sig,'o',ti,remmi.util.sir(b,ti',td),'-');
+                ylim([0 max(dset.img(:))]);
+                pause(.01)
                 
                 % load the dataset
                 mtirSet.M0a(ro,pe,sl)=b(1);
                 mtirSet.M0b(ro,pe,sl)=b(2);
-                mtirSet.PSR(ro,pe,sl)=b(2)/b(1); %M0b/M0a
+                mtirSet.PSR(ro,pe,sl)=b(2)/b(1);
                 mtirSet.BPF(ro,pe,sl)=b(2)/(b(2)+b(1));
                 mtirSet.kmf(ro,pe,sl)=b(3);
                 mtirSet.T1(ro,pe,sl)=1/b(4);
+                mtirSet.inv_eff(ro,pe,sl)=b(5);
                 
                 % save confidence intervals on the original parameters
                 mtirSet.ci{ro,pe,sl} = nlparci(b,res,'jacobian',jac); 

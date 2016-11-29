@@ -8,7 +8,7 @@ function pars = parsBruker(filename)
 
 fid = fopen(filename,'r');
 if fid == -1
-    error('Could not open method file');
+    error('Could not open method file: %s',filename);
 end % if
 
 
@@ -17,13 +17,13 @@ while line ~= -1
     if strcmp(line(1:min(end,3)),'##$')
         % this line describes a parameter
         line = line(4:end);
-        parts = strsplit(line,'=');
-        if length(parts) ~= 2
+        idx = strfind(line,'=');
+        if length(idx) ~= 1 %length(parts) ~= 2
             warning('Unable to parse line: %s',line);
         end
         
-        parID = parts{1};
-        value = strtrim(parts{2});
+        parID = line(1:idx-1);%parts{1};
+        value = line(idx+1:end);%strtrim(parts{2});
         
         if strcmp(value(1),'(')
             % This is an array of values. How many values should be in this array?

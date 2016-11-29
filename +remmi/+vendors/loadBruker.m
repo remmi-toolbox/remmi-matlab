@@ -1,4 +1,4 @@
-function img = loadBruker(dataPath)
+function img = loadBruker(dataPath,methpars)
 % img = loadBruker(dataPath)
 % loads raw data from Bruker acquisitions & reconstructs images 
 %
@@ -13,10 +13,11 @@ end
 raw=fread(fid,'bit32'); %long=32-bit unsigned integer, signed=bit32
 fclose(fid);
 
-% load a few parameters
-methpath = fullfile(dataPath,'method');
-methpars = remmi.vendors.parsBruker(methpath);
-
+if ~exist('methpars','var')
+    % load a few parameters
+    methpath = fullfile(dataPath,'method');
+    methpars = remmi.vendors.parsBruker(methpath);
+end
 
 if isfield(methpars,'PVM_RareFactor')
     rarefactor = methpars.PVM_RareFactor;
@@ -66,6 +67,8 @@ img = fft(fft(data,encmatrix(1),1),encmatrix(2),2);
 if encmatrix(3) > 1
     img = fft(img,encmatrix(3),3);
 end
-img = fftshift(fftshift(fftshift(img,1),2),3);
+img = abs(fftshift(fftshift(fftshift(img,1),2),3));
+
+img = permute(img(:,end:-1:1,:,:),[2 1 3 4]);
 
 

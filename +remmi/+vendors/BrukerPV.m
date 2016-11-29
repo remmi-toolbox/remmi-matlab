@@ -7,6 +7,21 @@ classdef BrukerPV5 < handle
         function bool = isValid(spath)
             bool = exist(fullfile(spath,'subject'),'file') == 2;
         end
+        
+        function time = parsetime(val)
+            try
+                time = datenum(val,'HH:MM:SSddmmmyyyy');
+            catch 
+                try
+                    i1 = strfind(val,'<');
+                    i2 = strfind(val,'>');
+                    val = strsplit(val(i1+1:i2-1),',');
+                    time = datenum(val{1},'yyyy-mm-ddTHH:MM:SS');
+                catch
+                    time = 0;
+                end
+            end
+        end
     end
     
     methods
@@ -30,27 +45,17 @@ classdef BrukerPV5 < handle
             % find a list of all the experiments in this study, and sort
             % them by experiment ime
             exps = dir(obj.path);
-            mask = zeros(size(exps));
-            time = zeros(size(exps));
+            time = zeros(size(exps))-1;
             studies = {exps.name};
             for n=1:length(exps)
                 try
                     acqpars = remmi.vendors.parsBruker(fullfile(obj.path,studies{n},'acqp'));
-                    mask(n) = 1;
-                    val = acqpars.ACQ_time;
-                    if ~strcmp(val,'na')
-                        try
-                            val = datenum(val,'HH:MM:SSddmmmyyyy');
-                        catch 
-                            val = 0;
-                        end
-                    end
-                    time(n) = val;
+                    time(n) = remmi.vendors.BrukerPV5.parsetime(acqpars.ACQ_time);
                 catch
                 end
             end
             [~,i] = sort(time);
-            mask = mask & time>0;
+            mask = time>=0;
             studies = studies(i);
             studies = studies(mask(i));
         end
@@ -84,11 +89,7 @@ classdef BrukerPV5 < handle
 
             val = acqpars.ACQ_time;
             if ~strcmp(val,'na')
-                try
-                    val = datenum(val,'HH:MM:SSddmmmyyyy');
-                catch 
-                    val = 0;
-                end
+                val = remmi.vendors.BrukerPV5.parsetime(val);
             end
             pars.time = val;
 
@@ -103,7 +104,7 @@ classdef BrukerPV5 < handle
             
             % load images
             expPath = fullfile(obj.path,exp);
-            img = remmi.vendors.loadBruker(expPath);
+            img = abs(remmi.vendors.loadBruker(expPath,pars.methpars));
         end
     end
 end
