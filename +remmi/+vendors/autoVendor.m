@@ -11,8 +11,8 @@ loader = [];
 
 if ~exist(spath,'dir')
     error('Directory does not exist: %s',spath);
-elseif remmi.vendors.BrukerPV5.isValid(spath)
-    loader = remmi.vendors.BrukerPV5(spath);
+elseif remmi.vendors.BrukerPV.isValid(spath)
+    loader = remmi.vendors.BrukerPV(spath);
 elseif false
     % todo: add new vendors
 end

@@ -1,4 +1,4 @@
-classdef BrukerPV5 < handle
+classdef BrukerPV < handle
     properties
         path
     end
@@ -25,7 +25,7 @@ classdef BrukerPV5 < handle
     end
     
     methods
-        function obj = BrukerPV5(spath)
+        function obj = BrukerPV(spath)
             % initiates a study
             
             % ask for a directory if one isn't given
@@ -50,7 +50,7 @@ classdef BrukerPV5 < handle
             for n=1:length(exps)
                 try
                     acqpars = remmi.vendors.parsBruker(fullfile(obj.path,studies{n},'acqp'));
-                    time(n) = remmi.vendors.BrukerPV5.parsetime(acqpars.ACQ_time);
+                    time(n) = remmi.vendors.BrukerPV.parsetime(acqpars.ACQ_time);
                 catch
                 end
             end
@@ -89,7 +89,7 @@ classdef BrukerPV5 < handle
 
             val = acqpars.ACQ_time;
             if ~strcmp(val,'na')
-                val = remmi.vendors.BrukerPV5.parsetime(val);
+                val = remmi.vendors.BrukerPV.parsetime(val);
             end
             pars.time = val;
 
