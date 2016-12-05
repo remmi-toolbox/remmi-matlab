@@ -34,6 +34,8 @@ mtirSet.PSR = zeros(size(mask));
 mtirSet.BPF = zeros(size(mask));
 mtirSet.kmf = zeros(size(mask));
 mtirSet.T1 = zeros(size(mask));
+mtirSet.nrmse = zeros(size(mask));
+mtirSet.inv_eff = zeros(size(mask));
 mtirSet.ci = cell(size(mask));
 
 tot_evals = sum(mask(:));
@@ -57,11 +59,10 @@ for ro=1:size(dset.img,1)
                 % fit the data
                 opts = optimset('display','off');
                 [b,resnorm,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
-                %b
                 
-                semilogx(ti,sig,'o',ti,remmi.util.sir(b,ti',td),'-');
-                ylim([0 max(dset.img(:))]);
-                pause(.01)
+                % semilogx(ti,sig,'o',ti,remmi.util.sir(b,ti',td),'-');
+                % ylim([0 max(dset.img(:))]);
+                % pause(.01)
                 
                 % load the dataset
                 mtirSet.M0a(ro,pe,sl)=b(1);
@@ -71,6 +72,7 @@ for ro=1:size(dset.img,1)
                 mtirSet.kmf(ro,pe,sl)=b(3);
                 mtirSet.T1(ro,pe,sl)=1/b(4);
                 mtirSet.inv_eff(ro,pe,sl)=b(5);
+                mtirSet.nrmse(ro,pe,sl) = norm(res)/norm(sig);
                 
                 % save confidence intervals on the original parameters
                 mtirSet.ci{ro,pe,sl} = nlparci(b,res,'jacobian',jac); 

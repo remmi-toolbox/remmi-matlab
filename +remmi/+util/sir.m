@@ -3,23 +3,22 @@ function Mz = sir(X,ti,td)
 % compatible with Single Inversion Recovery analysis
 %   X(1) = signal of the free water pool 
 %   X(2) = signal of the bound water pool 
-%   X(3) = exchange rate from macro to water pools 
-%   X(4) = R1 of free water 
+%   X(3) = exchange rate from macro to water pools (Hz)
+%   X(4) = R1 of free water (Hz)
 %   X(5) = inversion efficiency 
 %   ti = list of inversion times
 %   td = a single delay time. tr = ti+td
 %   
-%   R1 of the bound pool is assumed to be 1 s
+%   R1 of the bound pool is assumed to be 1 Hz
 %
 % by Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-
 Moa = X(1); % free water pool
 Mob = X(2); % macro pool 
 kba = X(3); % exchange rate from macro to water
-R1a = X(4); % R1 of free water (measured R1)
-R1b = 1; % R1 of bound water, assumed to be 1 s.
+R1a = X(4); % R1 of free water (aka the measured R1)
+R1b = 1; % R1 of bound water, assumed to be 1 /s.
 alpha_a = X(5); % inv efficiency 
 alpha_b = 0.83;
 

@@ -30,7 +30,9 @@ if isfield(methpars,'EffectiveTE')
 else
     echotimes = methpars.PVM_EchoTime;
 end
+
 nreps = methpars.PVM_NRepetitions;
+
 encmatrix = methpars.PVM_Matrix;
 if length(encmatrix) < 3 
     encmatrix(3) = 1;

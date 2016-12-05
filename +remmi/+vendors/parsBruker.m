@@ -18,12 +18,12 @@ while line ~= -1
         % this line describes a parameter
         line = line(4:end);
         idx = strfind(line,'=');
-        if length(idx) ~= 1 %length(parts) ~= 2
+        if length(idx) ~= 1
             warning('Unable to parse line: %s',line);
         end
         
-        parID = line(1:idx-1);%parts{1};
-        value = line(idx+1:end);%strtrim(parts{2});
+        parID = line(1:idx-1);
+        value = line(idx+1:end);
         
         if strcmp(value(1),'(')
             % This is an array of values. How many values should be in this array?

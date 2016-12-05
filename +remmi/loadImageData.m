@@ -17,7 +17,7 @@ function dset = loadImageData(spath,exps)
 % for the REMMI Toolbox
 
 if nargin<1
-    spath = uigetdir([],'Select study');
+    spath = uigetdir([],'Select study directory');
     if spath == 0
         error('No study path given');
     end
@@ -50,17 +50,17 @@ combine_datasets = false;
 % Is there only one dataset?
 if length(exps)>1
     pp = [dset.pars];
-    seq = unique({pp.sequence});
     
     % Does each dataset use the same sequence?
+    seq = unique({pp.sequence});
     if (numel(seq) == 1)
-        nte = unique([pp.nte]);
         
         % Does each dataset have the same number of echo times?
+        nte = unique([pp.nte]);
         if (numel(nte) == 1)
-            sz = arrayfun(@(x) size(x.img),dset,'UniformOutput',false);
             
             % Do all datasets have the same size?
+            sz = arrayfun(@(x) size(x.img),dset,'UniformOutput',false);
             if isequal(sz{:})
                 combine_datasets = true;
             end
