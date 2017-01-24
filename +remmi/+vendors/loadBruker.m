@@ -26,9 +26,25 @@ else
 end
 
 if isfield(methpars,'EffectiveTE')
-    echotimes = methpars.EffectiveTE;
+    echotimes = methpars.EffectiveTE; % ms
 else
     echotimes = methpars.PVM_EchoTime;
+end
+
+% Number of diffusion images
+diffImgs = 1;
+if isfield(methpars,'REMMI_DwiOnOff')
+    if strcmp(methpars.REMMI_DwiOnOff,'Yes')
+        diffImgs = methpars.PVM_DwNDiffExp;
+    end
+end
+
+% Number of MTIR images
+mtirImgs = 1;
+if isfield(methpars,'REMMI_MtIrOnOff')
+    if strcmp(methpars.REMMI_MtIrOnOff,'Yes')
+        mtirImgs = methpars.REMMI_NMtIr;
+    end
 end
 
 nreps = methpars.PVM_NRepetitions;
@@ -49,18 +65,23 @@ else
 end
 
 % Bruker requires reaodut lines to have memory alignment of 2^n 
-roalign=length(raw)/length(echotimes)/encmatrix(2)/encmatrix(3)/2;
+roalign=length(raw)/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
+    diffImgs/mtirImgs/nreps;
 
 % combine real/imaginary
 data = reshape(raw,2,length(raw)/2);
 data = data(1,:) + 1i*data(2,:);
 
-% at this point, the array index is [ro,rarefactor,echoes,pe1,pe2,nreps]
-data = reshape(data,roalign,rarefactor,length(echotimes),encmatrix(2)/rarefactor,encmatrix(3),nreps);
-data = permute(data,[1,2,4,5,3,6]); % format is [ro,rare,pe1,pe2,echoes,nreps]
-data = reshape(data,roalign,encmatrix(2),encmatrix(3),length(echotimes),nreps);
-data = data(1:encmatrix(1),:,:,:);
-data(:,pe1table,pe2table,:,:) = data;
+% at this point, the array index is : 
+% [ro,rarefactor,echoes,pe1,pe2,diff,mtir,nreps]
+data = reshape(data,roalign,rarefactor,length(echotimes),...
+    encmatrix(2)/rarefactor,encmatrix(3),diffImgs,mtirImgs,nreps);
+data = permute(data,[1,2,4,5,3,6,7,8]); 
+% format is now [ro,rare,pe1,pe2,echoes,diffImgs,nreps]
+data = reshape(data,roalign,encmatrix(2),encmatrix(3),length(echotimes),...
+    diffImgs,mtirImgs,nreps);
+data = data(1:encmatrix(1),:,:,:,:,:,:);
+data(:,pe1table,pe2table,:,:,:,:,:) = data;
 
 % reconstruct images
 data = remmi.util.apodize(data,0.25);
@@ -71,6 +92,6 @@ if encmatrix(3) > 1
 end
 img = abs(fftshift(fftshift(fftshift(img,1),2),3));
 
-img = permute(img(:,end:-1:1,:,:),[2 1 3 4]);
+img = permute(img(:,end:-1:1,:,:,:),[2 1 3 4 5]);
 
 

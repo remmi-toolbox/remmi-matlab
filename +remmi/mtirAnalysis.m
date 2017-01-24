@@ -1,4 +1,4 @@
-function mtirSet = mtirAnalysis(dset)
+function mtirSet = mtirAnalysis(dset,display)
 % mtirSet = mtirAnalysis(dset) performs MTIR analysis on the dataset: 
 %
 %   mtirAnalysis(dset)
@@ -20,11 +20,24 @@ sz = size(dset.img);
 ti = dset.pars.ti/1000;
 td = dset.pars.td/1000;
 
+if numel(ti)<6
+    error('There are not enough inversion times in this datatset for MTIR analysis')
+end
+
+if numel(ti) ~= sz(4)
+    error('The number of inversion times does not match the dataset dimenions')
+end
+
 % define a mask if one is not given
 if isfield(dset,'mask')
     mask = dset.mask;
 else
-    mask = true(prod(sz(1:3),1));
+    mask = true(sz(1:3));
+end
+
+plotiter
+if ~exist('display','var')
+    display = 'off';
 end
 
 % initialize the mtir dataset
@@ -57,12 +70,8 @@ for ro=1:size(dset.img,1)
                 ub = [     inf,         inf, 1/min(ti), inf,   1];
                 
                 % fit the data
-                opts = optimset('display','off');
-                [b,resnorm,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
-                
-                % semilogx(ti,sig,'o',ti,remmi.util.sir(b,ti',td),'-');
-                % ylim([0 max(dset.img(:))]);
-                % pause(.01)
+                opts = optimset('display',display);
+                [b,~,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
                 
                 % load the dataset
                 mtirSet.M0a(ro,pe,sl)=b(1);

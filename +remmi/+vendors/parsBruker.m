@@ -27,14 +27,14 @@ while line ~= -1
         
         if strcmp(value(1),'(')
             % This is an array of values. How many values should be in this array?
-            nval = str2num(value);
+            nval = str2num(value(2:end-1));
             if isempty(nval)
                 % this line is likely a pulse description. Skip for now.
                 line = fgetl(fid);
                 continue;
             end
             
-            all_lines = [];
+            all_lines = '';
             this_line = strtrim(fgetl(fid));
             while ~strcmp(this_line(1),'#') && ~strcmp(this_line(1),'$')
                 all_lines = [all_lines ' ' this_line];
@@ -46,7 +46,8 @@ while line ~= -1
             [val, status] = str2num(all_lines);
             if status % read as a number
                 pars.(parID) = val;
-                
+            elseif isempty(all_lines)
+                pars.(parID) = nval;
             else % read as a string
                 if strcmp(all_lines(1),'<') && strcmp(all_lines(end),'>')
                     % remove brackets 
