@@ -1,7 +1,7 @@
 function mtirSet = mtirAnalysis(dset,display)
 % mtirSet = mtirAnalysis(dset) performs MTIR analysis on the dataset: 
 %
-%   mtirAnalysis(dset)
+%   mtirAnalysis(dset,display)
 %       dset.img = image data in the format (x,y,z,ti) (constant td)
 %       dset.mask = mask for processing data (optional, but speeds up
 %           computation time)
@@ -24,7 +24,7 @@ if numel(ti)<6
     error('There are not enough inversion times in this datatset for MTIR analysis')
 end
 
-if numel(ti) ~= sz(4)
+if numel(ti) ~= sz(5)
     error('The number of inversion times does not match the dataset dimenions')
 end
 
@@ -35,7 +35,6 @@ else
     mask = true(sz(1:3));
 end
 
-plotiter
 if ~exist('display','var')
     display = 'off';
 end

@@ -78,10 +78,14 @@ classdef BrukerPV < handle
             end
             pars.nte = methpars.PVM_NEchoImages;
             pars.tr = methpars.PVM_RepetitionTime;
-            if isfield(methpars,'InversionTime')
+            if isfield(methpars,'REMMI_MtIrTimeArr')
+                pars.ti = methpars.REMMI_MtIrTimeArr;
+            elseif isfield(methpars,'InversionTime')
                 pars.ti = methpars.InversionTime;
             end
-            if isfield(methpars,'RepetitionDelayTime')
+            if isfield(methpars,'REMMI_MtTDTime')
+                pars.td = methpars.REMMI_MtTDTime;
+            elseif isfield(methpars,'RepetitionDelayTime')
                 pars.td = methpars.RepetitionDelayTime;
             end
             pars.vendor = 'Bruker';
