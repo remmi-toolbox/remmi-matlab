@@ -16,10 +16,17 @@ function dtiSet = dtiAnalysis(dset,mode)
 % size of the dataset
 sz = size(dset.img); 
 
+% what dimension is DW encoding?
+dwDim = ismember(dset.labels,'DW');
+
+if ~any(dwDim)
+    error('Data set does not contain multiple diffusion encodings');
+end
+
 if isfield(dset,'mask')
     mask = dset.mask;
 else
-    mask = true(prod(sz(1:3),1));
+    mask = true(prod(sz(~dwDim),1));
 end
 
 diffFun = @(x) remmi.util.dtilin(x,dset.bmat);
@@ -31,33 +38,34 @@ if exist('mode','var')
 end
 
 % initalize data set to appropriate sizes
-dtiSet.fa = zeros(sz(1:4));
-dtiSet.adc = zeros(sz(1:4));
-dtiSet.vec = zeros([sz(1:4) 3 3]);
-dtiSet.eig = zeros([sz(1:4) 3]);
+dtiSet.fa = zeros(sz(~dwDim));
+dtiSet.adc = zeros(sz(~dwDim));
+dtiSet.vec = zeros([3 3 sz(~dwDim)]);
+dtiSet.eig = zeros([3 sz(~dwDim)]);
 
 tot_evals = sum(mask(:))*sz(4);
 evals = 0;
 
+% make the DW dimension the first index. 
+idx = 1:numel(size(dset.img));
+data = permute(dset.img,[idx(dwDim) idx(~dwDim)]);
+
 fprintf('%3.0f %% done...',0);
-for nx = 1:sz(1)
-    for ny = 1:sz(2)
-        for nz = 1:sz(3)
-            if mask(nx,ny,nz)
-                for ni = 1:sz(4)
-                    sig = squeeze(dset.img(nx,ny,nz,ni,:));
-                    
-                    [adc,fa,vec,eig] = diffFun(sig);
-                    
-                    dtiSet.fa(nx,ny,nz,ni) = fa;
-                    dtiSet.adc(nx,ny,nz,ni) = adc;
-                    dtiSet.eigvec(nx,ny,nz,ni,:,:) = vec;
-                    dtiSet.eigval(nx,ny,nz,ni,:) = eig;
-                    evals = evals+1;
-                end
-            end
-        end
+for n = 1:numel(mask)
+    if mask(n)
+        sig = abs(squeeze(data(:,n)));
+
+        [adc,fa,vec,eig] = diffFun(sig);
+
+        dtiSet.fa(n) = fa;
+        dtiSet.adc(n) = adc;
+        dtiSet.vec(:,:,n) = vec;
+        dtiSet.eig(:,n) = eig;
+        evals = evals+1;
         fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',evals/tot_evals*100);
     end
 end
 fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
+
+dtiSet.vec = permute(dtiSet.vec,[idx+2 1 2]);
+dtiSet.eig = permute(dtiSet.eig,[idx+1 1]);

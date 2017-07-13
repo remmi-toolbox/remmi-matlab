@@ -28,8 +28,8 @@ study = remmi.vendors.autoVendor(spath);
 
 if nargin<2
     exps = study.list();
-    sel = listdlg('ListString',exps);
-    exps = exps(sel);
+    sel = listdlg('ListString',exps.name);
+    exps = exps.id(sel);
     if isempty(exps)
         error('No experiments specified in %s',spath);
     end
@@ -41,28 +41,41 @@ end
 
 % load all the datasets
 for n=1:length(exps)
-    [dset(n).img,dset(n).pars] = study.load(num2str(exps{n}));
+    [dset(n).img,dset(n).labels,dset(n).pars] = study.load(num2str(exps{n}));
 end
 
 % check to see if we should combine these datasets
 combine_datasets = false;
 
+
 % Is there only one dataset?
-if length(exps)>1
-    pp = [dset.pars];
+if length(exps)>1 
     
-    % Does each dataset use the same sequence?
-    seq = unique({pp.sequence});
-    if (numel(seq) == 1)
-        
-        % Does each dataset have the same number of echo times?
-        nte = unique([pp.nte]);
-        if (numel(nte) == 1)
-            
-            % Do all datasets have the same size?
-            sz = arrayfun(@(x) size(x.img),dset,'UniformOutput',false);
-            if isequal(sz{:})
-                combine_datasets = true;
+    % Do the parameters have the same structure?
+    sameStructure = true;
+    try
+        pp = [dset.pars];
+    catch
+        % the structures here are disimilar. These data sets should not be
+        % combined. 
+        sameStructure = false;
+    end
+    
+    if sameStructure
+        % Does each dataset use the same sequence?
+        seq = unique({pp.sequence});
+
+        if (numel(seq) == 1)
+
+            % Does each dataset have the same label order?
+            labels = arrayfun(@(x) x.labels,dset,'UniformOutput',false);
+            if isequal(labels{:})
+
+                % Do all datasets have the same size?
+                sz = arrayfun(@(x) size(x.img),dset,'UniformOutput',false);
+                if isequal(sz{:})
+                    combine_datasets = true;
+                end
             end
         end
     end
@@ -75,6 +88,7 @@ if combine_datasets
     % concatenate the image data
     catdim = max(length(sz{1})+1,4);
     img = cat(catdim,dset.img);
+    labels = [dset(1).labels 'EXP'];
 
     % concatenate parameters
     pars = [dset.pars];
@@ -91,9 +105,16 @@ if combine_datasets
         if ~isstruct(par.(names{n})(1))
             % if all of the parameter values are identical, replace them
             % with a single value.
-            un = unique(par.(names{n}));
-            if length(un) == 1; 
-                par.(names{n}) = un; 
+            try
+                un = unique(par.(names{n}));
+                if length(un) == 1; 
+                    par.(names{n}) = un; 
+                end
+            catch
+                % this must be a cell array of a matrix/vector. 
+                if isequal(par.(names{n}){:})
+                    par.(names{n}) = par.(names{n}){1}; 
+                end
             end
         end
     end
@@ -101,4 +122,5 @@ if combine_datasets
     dset = struct();
     dset.img = img;
     dset.pars = par;
+    dset.labels = labels;
 end

@@ -29,8 +29,17 @@ while line ~= -1
             % This is an array of values. How many values should be in this array?
             nval = str2num(value(2:end-1));
             if isempty(nval)
-                % this line is likely a pulse description. Skip for now.
-                line = fgetl(fid);
+                % Read the whole thing in, and save as a string
+                all_lines = value;
+                this_line = strtrim(fgetl(fid));
+                
+                while ~strcmp(this_line(1),'#') && ~strcmp(this_line(1),'$')
+                    all_lines = [all_lines ' ' this_line];
+                    this_line = strtrim(fgetl(fid));
+                    pars.(parID) = all_lines;
+                end
+                
+                line = this_line;
                 continue;
             end
             

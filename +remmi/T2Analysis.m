@@ -35,14 +35,23 @@ function t2set = T2Analysis(dset,metrics,fitting)
 
 sz = size(dset.img); 
 
+seg_sz = 256; % number of multi-echo measurements to process at one time
+
+% what dimension is multiple echoes?
+echoDim = ismember(dset.labels,'NE');
+
+if ~any(echoDim)
+    error('Data set does not contain multiple echo times');
+end
+
 % get the echo times
-data.t = dset.pars.te/1000;
+in.t = dset.pars.te/1000;
 
 % define a mask if one is not given
 if isfield(dset,'mask')
-    mask = dset.mask;
+    mask = squeeze(dset.mask);
 else
-    mask = true(prod(sz(1:3),1));
+    mask = squeeze(true(prod(sz(~echoDim),1)));
 end
 
 % define the default fitting parameters if none are given
@@ -54,7 +63,7 @@ if ~exist('fitting','var')
     fitting.B1fit = 'y';
     fitting.rangetheta=[135 180];
     fitting.numbertheta=10;
-    fitting.rangeT= [data.t(1)/2 .5];
+    fitting.rangeT= [in.t(1)/2 .5];
 end
 analysis.graph = 'n';
 analysis.interactive = 'n';
@@ -67,31 +76,38 @@ if ~exist('metrics','var')
 end
 
 names = fieldnames(metrics);
-maps = zeros([prod(sz(1:2)) sz(3) length(names)]);
+maps = zeros([length(names) sz(~echoDim)]);
 
-for slice=1:size(dset.img,3)
-    fprintf('Processing slice %d of %d.\n',slice,size(dset.img,3));
-    % image slice
-    img = abs(dset.img(:,:,slice,:));
-    img = reshape(img,prod(sz(1:2)),sz(4)); % linearize
+% put the NE dim first
+idx = 1:numel(size(dset.img));
+data = permute(dset.img,[idx(echoDim) idx(~echoDim)]);
+
+% linear index to all the vectors to process
+mask_idx = find(mask);
+
+% split the calls to MERA into segments of size seg_sz
+nseg = ceil(numel(mask_idx)/seg_sz);
+for seg=1:nseg
+    fprintf('Processing segment %d of %d.\n',seg,nseg);
     
-    % mask slice
-    slmask = mask(:,:,slice)>0;
-    data.D = img(slmask(:),:)';
+    % segment the mask
+    segmask = (seg_sz*(seg-1)+1):min(seg_sz*seg,numel(mask_idx));
+    
+    in.D = abs(data(:,mask_idx(segmask)));
 
     % process the data in MERA
-    out = remmi.MERA.MERA(data,fitting,analysis);
+    out = remmi.MERA.MERA(in,fitting,analysis);
 
     % compute all of the metrics required
     for m=1:length(names)
-        maps(slmask,slice,m) = metrics.(names{m})(out);
+        maps(m,mask_idx(segmask)) = metrics.(names{m})(out);
     end
 end
 
 % set the maps into the dataset with proper dimensions
 t2set = struct();
 for m=1:length(names)
-    t2set.(names{m}) = reshape(maps(:,:,m),sz(1:3));
+    t2set.(names{m}) = reshape(maps(m,:),sz(~echoDim));
 end
 
 t2set.fitting = fitting;

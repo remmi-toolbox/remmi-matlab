@@ -5,14 +5,6 @@ function img = loadBruker(dataPath,methpars)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-fid=fopen([dataPath,'/fid']);
-if (fid == -1)
-    error('Cannot open fid file in %s', dataPath);
-end
-
-raw=fread(fid,'bit32'); %long=32-bit unsigned integer, signed=bit32
-fclose(fid);
-
 if ~exist('methpars','var')
     % load a few parameters
     methpath = fullfile(dataPath,'method');
@@ -39,14 +31,23 @@ if isfield(methpars,'REMMI_DwiOnOff')
     end
 end
 
-% Number of MTIR images
-mtirImgs = 1;
+% Number of IR images (including MTIR)
+irImgs = 1;
 if isfield(methpars,'REMMI_MtIrOnOff')
     if strcmp(methpars.REMMI_MtIrOnOff,'Yes')
-        mtirImgs = methpars.REMMI_NMtIr;
+        irImgs = methpars.REMMI_NMtIr;
     end
 end
 
+% Number of MT images (MT offset)
+mtImgs = 1;
+if isfield(methpars,'REMMI_NMagTrans')
+    if strcmp(methpars.PVM_MagTransOnOff,'On')
+        mtImgs = methpars.REMMI_NMagTrans;
+    end
+end
+
+nslice = sum(methpars.PVM_SPackArrNSlices);
 nreps = methpars.PVM_NRepetitions;
 
 encmatrix = methpars.PVM_Matrix;
@@ -64,24 +65,84 @@ else
     pe2table = 1;
 end
 
+% if reference phase data exists, read it in
+ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs);
+ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs);
+if isfield(methpars,'REMMI_ProcnoResult')
+    vals = strsplit(methpars.REMMI_ProcnoResult(2:end-1),',');
+    [fstudy,~] = fileparts(dataPath);
+    ph_fid = fopen(fullfile(fstudy,strtrim(vals{end-1}),'fid'));
+    ph_raw = fread(ph_fid,'bit32');
+    fclose(ph_fid);
+    
+    % real + imaginary
+    ph_raw = reshape(ph_raw,2,length(ph_raw)/2);
+    ph_raw = ph_raw(1,:) + 1i*ph_raw(2,:);
+    
+    % set format to [readout, echo]
+    ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),nslice,diffImgs);
+    ph_raw = ph_raw(1:encmatrix(1),:);
+    
+    [~,idx] = max(abs(ph_raw(:,1)));
+    rng = (-1:1) + idx;
+    ph_ref0 = angle(sum(ph_raw(rng,:),1));
+    
+    ph_ref0 = reshape(ph_ref0,[1 rarefactor 1 1 length(echotimes) nslice diffImgs]);
+    ph_ref1 = zeros(size(ph_ref0));
+end
+
+
+fid=fopen([dataPath,'/fid']);
+if (fid == -1)
+    error('Cannot open fid file in %s', dataPath);
+end
+
+raw=fread(fid,'bit32'); %long=32-bit unsigned integer, signed=bit32
+fclose(fid);
+
 % Bruker requires reaodut lines to have memory alignment of 2^n 
 roalign=length(raw)/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
-    diffImgs/mtirImgs/nreps;
+    diffImgs/irImgs/mtImgs/nreps/nslice;
 
 % combine real/imaginary
 data = reshape(raw,2,length(raw)/2);
 data = data(1,:) + 1i*data(2,:);
 
 % at this point, the array index is : 
-% [ro,rarefactor,echoes,pe1,pe2,diff,mtir,nreps]
-data = reshape(data,roalign,rarefactor,length(echotimes),...
-    encmatrix(2)/rarefactor,encmatrix(3),diffImgs,mtirImgs,nreps);
-data = permute(data,[1,2,4,5,3,6,7,8]); 
-% format is now [ro,rare,pe1,pe2,echoes,diffImgs,nreps]
-data = reshape(data,roalign,encmatrix(2),encmatrix(3),length(echotimes),...
-    diffImgs,mtirImgs,nreps);
-data = data(1:encmatrix(1),:,:,:,:,:,:);
-data(:,pe1table,pe2table,:,:,:,:,:) = data;
+% [ro,rarefactor,echoes,slices,pe1,pe2,diff,mtir,nreps]
+data = reshape(data,roalign,rarefactor,length(echotimes),nslice,...
+    encmatrix(2)/rarefactor,encmatrix(3),diffImgs,irImgs,mtImgs,nreps);
+
+% reorder
+data = permute(data,[1,2,5,6,3,4,7,8,9]);
+data = data(1:encmatrix(1),:,:,:,:,:,:,:,:);
+% format is now [ro,rare,pe1,pe2,echoes,slices,diffImgs,mtImgs,nreps]
+
+% move to projection space
+proj = fftshift(fft(fftshift(data,1)),1);
+
+% correct for 0th & first order phase
+proj = bsxfun(@times,proj,exp(-1i*(...
+    bsxfun(@plus, ph_ref0(1,:,1), bsxfun(@times,(1:encmatrix(1))',ph_ref1)))));
+
+% back into full fourier space
+data = ifftshift(ifft(ifftshift(proj,1)),1);
+
+% use phase encode tables
+data = reshape(data,encmatrix(1),encmatrix(2),encmatrix(3),length(echotimes),...
+    nslice,diffImgs,irImgs,mtImgs,nreps);
+data(:,pe1table,pe2table,:,:,:,:,:,:,:) = data;
+
+% flip odd echoes in gradient echo sequences
+if methpars.PVM_NEchoImages>1 && ~isfield(methpars,'RefPulse1')
+    % no refocusing pulse. This must be a gradient echo sequence. 
+    if isfield(methpars,'EchoAcqMode')
+        if strcmp(methpars.EchoAcqMode,'allEchoes')
+            disp('fliping...')
+            data(:,:,:,2:2:end,:,:,:,:,:,:) = data(end:-1:1,:,:,2:2:end,:,:,:,:,:,:);
+        end
+    end
+end
 
 % reconstruct images
 data = remmi.util.apodize(data,0.25);
@@ -90,8 +151,8 @@ img = fft(fft(data,encmatrix(1),1),encmatrix(2),2);
 if encmatrix(3) > 1
     img = fft(img,encmatrix(3),3);
 end
-img = abs(fftshift(fftshift(fftshift(img,1),2),3));
+img = fftshift(fftshift(fftshift(img,1),2),3);
 
-img = permute(img(:,end:-1:1,:,:,:),[2 1 3 4 5]);
+img = permute(img(:,end:-1:1,:,:,:,:,:,:),[2 1 3 4 5 6 7 8]);
 
 
