@@ -17,6 +17,7 @@ function dset = loadImageData(spath,exps)
 % for the REMMI Toolbox
 
 if nargin<1
+    disp('Select the study directory');
     spath = uigetdir([],'Select study directory');
     if spath == 0
         error('No study path given');
@@ -27,6 +28,7 @@ end
 study = remmi.vendors.autoVendor(spath);
 
 if nargin<2
+    disp('Select the experiment(s)');
     exps = study.list();
     sel = listdlg('ListString',exps.name);
     exps = exps.id(sel);

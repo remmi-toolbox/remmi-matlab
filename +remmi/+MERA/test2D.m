@@ -10,7 +10,7 @@ close all
 SNR = 1000; % signal to noise ratio
 
 % amplitude and time constants for signal component 1
-M1 = .4; Ta1 = .020; Tb1 = 0.15; 
+M1 = .4; Ta1 = .020; Tb1 = 0.35; 
 % amplitude and time constants for signal component 2
 M2 = .6; Ta2 = .0750; Tb2 = .25; 
 % amplitude and time constants for signal component 3

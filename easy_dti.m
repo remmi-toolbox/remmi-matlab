@@ -1,30 +1,22 @@
-clear all
+clearvars
 
-% full path to the study
-study = '/Users/kevinharkins/Data/2017/01.24/dtiMSE/20170121_091727_CuS_ball_phantom_1_2';
+%% read in & reconstruct image data
+imgset = remmi.loadImageData();
 
-% list of experiments that contain mtir data to analyze
-exps = 15;
-
-imgset = remmi.loadImageData(study,exps);
+% and b-matrix
 imgset.bmat = remmi.vendors.bmatBruker(imgset.pars);
 
-%% Set a mask
-imgset.mask = abs(imgset.img(:,:,:,1))./max(abs(imgset.img(:))) > 0.1;
+%% Set a mask based upon the first diffusion-weighted image
 
-%% Look at an example image and mask
-figure(1)
-imagesc(imgset.img(:,:,ceil(end/2),1,1))
-axis image off
-colormap gray
+% which dimension is diffusion-weighting?
+i = find(strcmp(imgset.labels,'DW'));
+b0img = remmi.util.slice(imgset.img,i,1);
 
-figure(2)
-imagesc(imgset.mask(:,:,ceil(end/2)))
-axis image off
+% create a threshold mask
+imgset.mask = abs(b0img)./max(abs(b0img(:))) > 0.1;
 
 %% perform MTIR analysis
-tic
 dtiSet = remmi.dtiAnalysis(imgset);
-toc
 
-save dti.mat dtiSet
+%% save datasets
+save(['easy_dti_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])

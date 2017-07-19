@@ -1,33 +1,19 @@
-clear all
+clearvars
 
-% full path to the study
-study = 'data/klw_20140131_01.o61';
+%% read in & reconstruct image data
+imgset = remmi.loadImageData();
 
-% list of experiments that contain mtir data to analyze
-exps = 11:25;
+%% Set a mask based upon the last inversion image
 
-imgset = remmi.loadImageData(study,exps);
+% which dimension is IR?
+i = find(strcmp(imgset.labels,'IR'));
+img = remmi.util.slice(imgset.img,i,size(imgset.img,i));
 
-%% Set a mask
-imgset.mask = abs(imgset.img(:,:,:,1))./max(abs(imgset.img(:))) > 0.1;
+% create a threshold mask
+imgset.mask = abs(img)./max(abs(img(:))) > 0.1;
 
-%% Look at an example image and mask
-figure(1)
-imagesc(imgset.img(:,:,ceil(end/2),end))
-axis image off
-colormap gray
+%% process MTIR
+qmt = remmi.mtirAnalysis(mtir);
 
-figure(2)
-imagesc(imgset.mask(:,:,ceil(end/2)))
-axis image off
-
-%%
-disp('Press any key to continue...')
-pause
-
-%% perform MTIR analysis
-tic
-mtirSet = remmi.mtirAnalysis(imgset);
-toc
-
-save mtir.mat mtirSet
+%% save datasets
+save(['easy_mt_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])

@@ -1,20 +1,19 @@
-clear all
+clearvars
 
-% path to the study
-study = 'data/epgtest';
-exps = 5;
+%% read in & reconstruct image data
+imgset = remmi.loadImageData();
 
-imgset = remmi.loadImageData(study,exps);
+%% Set a mask based upon the first echo time image
 
-%% Set a mask
-imgset.mask = abs(imgset.img(:,:,:,1))./max(abs(imgset.img(:))) > 0.1;
+% which dimension is NE?
+i = find(strcmp(imgset.labels,'NE'));
+te1img = remmi.util.slice(imgset.img,i,1);
+
+% create a threshold mask
+imgset.mask = abs(te1img)./max(abs(te1img(:))) > 0.1;
 
 %% Process multi-TE data
 t2set = remmi.T2Analysis(imgset);
 
-%%
-figure(1)
-imagesc(t2set.T2);
-axis image off
-colormap jet
-colorbar
+%% save datasets
+save(['easy_t2_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])

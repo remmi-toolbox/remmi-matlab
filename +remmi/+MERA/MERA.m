@@ -1,7 +1,7 @@
 function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % function [output] = MERA(DATA,FITTING,ANALYSIS)
 %
-% MERA version 2.0
+% MERA version 2.03
 % fits data in structure DATA with a distribution of decaying exponential
 % functions, subject to a non-negative constraint and other options as
 % defined in the structure FITTING. Output includes analysis of
@@ -9,15 +9,15 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %
 % Required Inputs:
 %
-%   DATA.d: column vector of signal magnitudes. If DATA.d is a matrix, then
+%   DATA.D: column vector of signal magnitudes. If DATA.D is a matrix, then
 %     each colum is fitted as a separate signal unless FITTING.twoD = 'y'
-%     If FITTING.twoD = 'y', DATA.d must be a matrix of dimensions
+%     If FITTING.twoD = 'y', DATA.D must be a matrix of dimensions
 %     [length(DATA.t),length(DATA.t2)]
 %
 %   DATA.t: column vector of sample times (units of seconds)
 %
 %   DATA.t2: column vector of sample times (unit of seconds) for the second
-%     dminension of DATA.d when FITTING.twoD = 'y'
+%     dminension of DATA.D when FITTING.twoD = 'y'
 %
 % Optional Inputs: (defaults)
 %
@@ -45,6 +45,8 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %                       FITTING.pinc percent
 %   If FITTING.regadj = 'manual'
 %     FITTING.regweight: regularization weighting (0.1)
+%       note that this is different from "mu" in Version 1.0 by a square
+%       root
 %   If FITTING.regadj = 'erinc'
 %     FITTING.percentinc: regularization weighting increased until
 %       the fit residual norm is increased by FITTING.percentinc (1.0)
@@ -139,7 +141,7 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %   tabs
 %% License
 
-% <MERA Toolbox Version 2.0 (1D,2D Multi-exponential Relaxation Analysis)>
+% <MERA Toolbox Version 2.02 (1D,2D Multi-exponential Relaxation Analysis)>
 % Copyright (C) <2014>  <Mark D. Does, Vanderbilt University>
 % MERA is written and maitained by Mark D. Does, with contributions from
 % numerous people, listed below.
@@ -165,6 +167,24 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %
 % If you have a burning desire to thank me for developing, maintaining, and
 % sharing this code, consider that I am a big fan of single malt whisky!
+
+%% Version History
+% 
+% Version 2.0, 15 Feb 2014
+%
+% Version 2.01, 26 Feb 2014
+%   corrects auto-extract error that may have cased a short time-constant
+%   component to be missed or inaccurately calculated
+%   
+%   forces analysis.graph = 'y' if analysis.extract = 'manual'
+%
+% Version 2.02, 11 Mar 2014
+%   corrects auto-extract error in 2D fitting -- Thanks to Alan Seifert at
+%   UPENN for finding this problem
+%
+% Version 2.03, 11 Sept 2014
+%   corrected the help comments to clarify the structure name for input data to
+%   be "Data.D" not "Data.d"
 
 %% Acknowledgements/Contributions
 
@@ -382,7 +402,7 @@ if strcmpi(analysis.interactive,'y')
   w = text(0.25,0.75,'Calculating ...');
   drawnow;
 else
-  w = waitbar(0,'Calculating ...');
+  fprintf('%3.0f %% done...',0);
 end
 
 %% Extract data and normalize data
@@ -509,7 +529,7 @@ for i = 1:fitting.numbertrains
   
   % update waitbar
   if strcmpi(analysis.interactive,'n')
-    waitbar(i/fitting.numbertrains,w,'Calculating ...');
+    fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',i/fitting.numbertrains*100);
   end
   
   % initialize fit errors to zero for all possible theta
@@ -588,7 +608,7 @@ end
 SNR= sum(S)./std(R);
 
 if strcmpi(analysis.interactive,'n')
-  close(w)
+  fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
 end
 
 % reshape 2D fitting into matrices
@@ -876,13 +896,13 @@ if strcmpi(analysis.extract,'auto')
   Tv = bsxfun(@times,Tv,indKe);
   % Remove spurious peaks outside acceptable range
   if strcmpi(fitting.twoD,'y')
-    indKe = (Tv(:,1) > analysis.rangeA(1)) & ...
-      (Tv(:,1) < analysis.rangeA(2));
-    indKe(:,2) = (Tv(:,2) > analysis.rangeA2(1)) & ...
-      (Tv(:,2) < analysis.rangeA2(2));
+    indKe = (Tv(:,1) >= analysis.rangeA(1)) & ...
+      (Tv(:,1) <= analysis.rangeA(2));
+    indKe(:,2) = (Tv(:,2) >= analysis.rangeA2(1)) & ...
+      (Tv(:,2) <= analysis.rangeA2(2));
     indKe = indKe(:,1)&indKe(:,2);
   else
-      indKe = (Tv > analysis.rangeA(1)) & (Tv < analysis.rangeA(2));
+      indKe = (Tv >= analysis.rangeA(1)) & (Tv <= analysis.rangeA(2));
   end
   
   Av = bsxfun(@times,Av,indKe);
@@ -891,8 +911,13 @@ if strcmpi(analysis.extract,'auto')
 end
 
 % sort Fv and Av by ascending Tv values
-[Tv,ix] = sort(Tv,1);
+[~,ix] = sort(Tv,1);
 for kj = 1:fitting.numbertrains
+  if strcmpi(fitting.twoD,'y')
+    Tv = Tv(ix(:,1),:);
+  else
+    Tv(:,kj) = Tv(ix(:,kj),kj);
+  end
   Fv(:,kj) = Fv(ix(:,kj),kj);
   Av(:,kj) = Av(ix(:,kj),kj);
 end
@@ -1078,9 +1103,9 @@ end
         % automatic 1D peak identification
         dy = diff(-S1);
         n = find(([dy' 0]<0) & ([0 dy']>=0));
-        n = n(2:end);
         nx{kt} = n;
       end
+
       Nc = max(cellfun('length',nx))+1; % max number of components found
       
     else
@@ -1580,6 +1605,7 @@ if analysisflags(1)
 else
   graph = 'n';
 end
+  
 
 if analysisflags(2)
   rangeA = real(analysis.rangeA);
@@ -1589,6 +1615,7 @@ if analysisflags(2)
 else
   rangeA = [min(rangeT) max(rangeT)];
 end
+rangeA = rangeA+[-eps,eps]; % avoid prob with round-off errors in Tv calc
 
 if analysisflags(5)
   rangeA2 = real(analysis.rangeA2);
@@ -1597,6 +1624,9 @@ if analysisflags(5)
   end
 else
   rangeA2 = [min(rangeT2) max(rangeT2)];
+end
+if ~isempty(rangeA2)
+  rangeA2 = rangeA2+[-eps,eps]; % avoid prob with round-off errors in Tv calc
 end
 
 if analysisflags(3)
@@ -1644,6 +1674,9 @@ if strcmpi(regtyp,'mg')&&strcmpi(extract,'manual')
     'multiple gaussian components' ];
   display(txt);
   extract = 'auto';
+end
+if strcmpi(extract,'manual')
+  graph = 'y';
 end
 
 if analysisflags(9)
