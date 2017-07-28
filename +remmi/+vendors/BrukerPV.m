@@ -56,7 +56,11 @@ classdef BrukerPV < handle
                 try
                     acqpars = remmi.vendors.parsBruker(fullfile(obj.path,sid{n},'acqp'));
                     time(n) = remmi.vendors.BrukerPV.parsetime(acqpars.ACQ_time);
-                    name{n} = acqpars.ACQ_scan_name;
+                    if acqpars.ACQ_sw_version(4) == '5'
+                        name{n} = [acqpars.ACQ_scan_name ' (E' sid{n} ')'];
+                    else
+                        name{n} = acqpars.ACQ_scan_name;
+                    end
                 catch
                 end
             end

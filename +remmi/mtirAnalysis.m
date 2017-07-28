@@ -97,7 +97,7 @@ for n=1:numel(mask)
         evals = evals+1;
         fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',evals/tot_evals*100);
     end
-end     
+end
 fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
 
 warning('on','MATLAB:singularMatrix')
