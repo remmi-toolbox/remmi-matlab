@@ -21,11 +21,11 @@ function t2set = T2Analysis(dset,metrics,fitting)
 %       fitting.regtyp = 'mc';
 %       fitting.regadj='manual';
 %       fitting.regweight=0.0005; 
-%       fitting.numberT = 100;
 %       fitting.B1fit = 'y';
 %       fitting.rangetheta=[135 180];
 %       fitting.numbertheta=10;
-%       fitting.rangeT= [data.t(1)/2 .5];
+%       fitting.numberT = 100;
+%       fitting.rangeT = [te(1)/2 .5];
 % 
 %   Returns a dataset which contains parameter maps defined in the metrics
 %   structure
@@ -59,11 +59,11 @@ if ~exist('fitting','var')
     fitting.regtyp = 'mc';
     fitting.regadj='manual';
     fitting.regweight=0.0005; 
-    fitting.numberT = 100;
     fitting.B1fit = 'y';
     fitting.rangetheta=[135 180];
     fitting.numbertheta=10;
-    fitting.rangeT= [in.t(1)/2 .5];
+    fitting.numberT = 100;
+    fitting.rangeT = [in.t(1)/2 .5];
 end
 analysis.graph = 'n';
 analysis.interactive = 'n';
@@ -76,7 +76,8 @@ if ~exist('metrics','var')
 end
 
 names = fieldnames(metrics);
-maps = zeros([length(names) sz(~echoDim)]);
+%maps = zeros([length(names) sz(~echoDim)]);
+maps = cell([length(names) sz(~echoDim)]);
 
 % put the NE dim first
 idx = 1:numel(size(dset.img));
@@ -87,6 +88,7 @@ mask_idx = find(mask);
 
 % split the calls to MERA into segments of size seg_sz
 nseg = ceil(numel(mask_idx)/seg_sz);
+metlen = zeros(size(names));
 for seg=1:nseg
     fprintf('Processing segment %d of %d.\n',seg,nseg);
     
@@ -96,19 +98,33 @@ for seg=1:nseg
     in.D = abs(data(:,mask_idx(segmask)));
 
     % process the data in MERA
-    out = remmi.MERA.MERA(in,fitting,analysis);
+    [out,fout] = remmi.MERA.MERA(in,fitting,analysis);
 
     % compute all of the metrics required
     for m=1:length(names)
-        maps(m,mask_idx(segmask)) = metrics.(names{m})(out);
+        % calculate the metric
+        met = metrics.(names{m})(out);
+        metlen(m) = size(met,1);  % save the size for later
+        
+        % store the maps for latter
+        maps(m,mask_idx(segmask)) = num2cell(met,1);
     end
 end
 
 % set the maps into the dataset with proper dimensions
 t2set = struct();
 for m=1:length(names)
-    t2set.(names{m}) = reshape(maps(m,:),sz(~echoDim));
+    % index to non-empty cells
+    ix=cellfun(@isempty, maps(m,:));
+    
+    % create matrix to hold the metric
+    val = zeros([metlen(m) sz(~echoDim)]);
+    val(:,~ix) = cell2mat(maps(m,:));
+    
+    % place into the return structure
+    t2set.(names{m}) = val;
 end
 
-t2set.fitting = fitting;
+t2set.fitting = fout;
 t2set.metrics = metrics;
+t2set.labels = dset.labels(~echoDim);
