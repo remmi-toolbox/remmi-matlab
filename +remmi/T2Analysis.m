@@ -76,7 +76,6 @@ if ~exist('metrics','var')
 end
 
 names = fieldnames(metrics);
-%maps = zeros([length(names) sz(~echoDim)]);
 maps = cell([length(names) sz(~echoDim)]);
 
 % put the NE dim first
@@ -106,12 +105,12 @@ for seg=1:nseg
         met = metrics.(names{m})(out);
         metlen(m) = size(met,1);  % save the size for later
         
-        % store the maps for latter
+        % store the maps for later
         maps(m,mask_idx(segmask)) = num2cell(met,1);
     end
 end
 
-% set the maps into the dataset with proper dimensions
+% set the maps into the dataset, keeping proper dimensions
 t2set = struct();
 for m=1:length(names)
     % index to non-empty cells
@@ -120,6 +119,13 @@ for m=1:length(names)
     % create matrix to hold the metric
     val = zeros([metlen(m) sz(~echoDim)]);
     val(:,~ix) = cell2mat(maps(m,:));
+    
+    nd = ndims(val);
+    
+    % rearrange
+    if nd>1
+        val = permute(val,[2:nd 1]);
+    end
     
     % place into the return structure
     t2set.(names{m}) = val;
