@@ -125,6 +125,7 @@ proj = fftshift(fft(fftshift(data,1)),1);
 proj = bsxfun(@times,proj,exp(-1i*(...
     bsxfun(@plus, ph_ref0(1,:,1), bsxfun(@times,(1:encmatrix(1))',ph_ref1)))));
 
+%%
 % back into full fourier space
 data = ifftshift(ifft(ifftshift(proj,1)),1);
 
@@ -142,6 +143,18 @@ if methpars.PVM_NEchoImages>1 && ~isfield(methpars,'RefPulse1')
             data(:,:,:,2:2:end,:,:,:,:,:,:) = data(end:-1:1,:,:,2:2:end,:,:,:,:,:,:);
         end
     end
+end
+
+% PE1 shift
+np = methpars.PVM_EncMatrix(2);
+line = reshape((1:np) - 1 - round(np/2),1,[]);
+data = bsxfun(@times,data,exp(1i*2*pi*line*methpars.PVM_Phase1Offset/methpars.PVM_Fov(2)));
+
+% PE2 shift
+if length(methpars.PVM_EncMatrix) > 2
+    np = methpars.PVM_EncMatrix(3);
+    line = reshape((1:np) - 1 - round(np/2),1,[]);
+    data = bsxfun(@times,data,exp(1i*2*pi*line*methpars.PVM_Phase2Offset/methpars.PVM_Fov(3)));
 end
 
 % reconstruct images
