@@ -5,7 +5,7 @@ function dtiSet = dtiAnalysis(dset,mode)
 %       dset.img = image data in the format (x,y,z,:,diff) (constant td)
 %       dset.mask = mask for processing data (optional, but speeds up
 %           computation time)
-%       dset.bmat = condensed bmatrix in ms/µm^2
+%       dset.bmat = condensed bmatrix in ms/ï¿½m^2
 %       mode = {'linear'}, 'nonlinear'
 % 
 %   Returns a data set containing dti parameter maps of ADC & FA.
@@ -17,7 +17,7 @@ function dtiSet = dtiAnalysis(dset,mode)
 sz = size(dset.img); 
 
 % what dimension is DW encoding?
-dwDim = ismember(dset.labels,'DW');
+dwDim = ismember(dset.labels,{'DW','NR'});
 
 if ~any(dwDim)
     error('Data set does not contain multiple diffusion encodings');
@@ -43,12 +43,16 @@ dtiSet.adc = zeros(sz(~dwDim));
 dtiSet.vec = zeros([3 3 sz(~dwDim)]);
 dtiSet.eig = zeros([3 sz(~dwDim)]);
 
-tot_evals = sum(mask(:))*sz(4);
+tot_evals = sum(mask(:));
 evals = 0;
 
 % make the DW dimension the first index. 
 idx = 1:numel(size(dset.img));
 data = permute(dset.img,[idx(dwDim) idx(~dwDim)]);
+
+if sum(dwDim) == 2
+    data = reshape(data,[prod(sz(dwDim)) sz(~dwDim)]);
+end
 
 fprintf('%3.0f %% done...',0);
 for n = 1:numel(mask)

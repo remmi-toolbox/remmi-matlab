@@ -6,19 +6,39 @@ gamma = 42.576; % MHz/T
 te = pp.te(1); % ms
 tm = 0; % ms
 gmax = pp.methpars.PVM_GradCalConst/gamma; % mT/m
-nB0 = pp.methpars.PVM_DwAoImages; % # of B0 images
 
-tssr = pp.methpars.PVM_DwSliceGradDur; % ms
-gssr = pp.methpars.PVM_DwSliceGrad*gmax/100; % mT/m
+% # of B0 images
+nB0 = pp.methpars.PVM_DwAoImages; 
+nB0end = pp.methpars.REMMI_DwAoImagesEnd;
+nB0begin = nB0 - nB0end;
 
-tcrush = pp.methpars.PVM_TeDwSliceSpoilGradDur; % ms
-gcrush = pp.methpars.PVM_TeDwSliceSpoilGrad*gmax/100; % mT/m
+ref = strsplit(pp.methpars.RefPulse1(2:end-1),',');
+refPulseDur = str2double(ref{1});
+tssr = 2*pp.methpars.REMMI_EddyDelay + refPulseDur; % ms
+gssr = pp.methpars.RefSliceGrad*gmax/100; % mT/m
+
+tcrush = pp.methpars.EchoSpoilDur; % ms
+gcrush = pp.methpars.REMMI_ModSpoilerAmp(1)*gmax/100; % mT/m
 
 % obtain normalized diffusion directions
 dwdir = reshape(pp.methpars.PVM_DwDir,3,[]);
-dro = [zeros(1,nB0) dwdir(1,:)];
-dpe = [zeros(1,nB0) dwdir(2,:)];
-dsl = [zeros(1,nB0) dwdir(3,:)];
+dro = [zeros(1,nB0begin) dwdir(1,:) zeros(1,nB0end)];
+dpe = [zeros(1,nB0begin) -dwdir(2,:) zeros(1,nB0end)];
+dsl = [zeros(1,nB0begin) dwdir(3,:) zeros(1,nB0end)];
+
+if strcmpi(pp.methpars.REMMI_DwGradPolarity,'Yes')
+    dro = [dro, -dro];
+    dpe = [dpe, -dpe];
+    dsl = [dsl, -dsl];
+    
+    dro = repmat(dro,[1 pp.methpars.PVM_NRepetitions/2]);
+    dpe = repmat(dpe,[1 pp.methpars.PVM_NRepetitions/2]);
+    dsl = repmat(dsl,[1 pp.methpars.PVM_NRepetitions/2]);
+else
+    dro = repmat(dro,[1 pp.methpars.PVM_NRepetitions]);
+    dpe = repmat(dpe,[1 pp.methpars.PVM_NRepetitions]);
+    dsl = repmat(dsl,[1 pp.methpars.PVM_NRepetitions]);
+end
 
 % diffusion gradients
 gdiff = pp.methpars.PVM_DwGradAmp*gmax/100; % mT/m
@@ -61,6 +81,9 @@ for n=1:length(dro)
     Gs(mask) = -gdiff*dsl(n);
     
     G = [Gr;Gp;Gs];
+    
+    plot(G')
+    pause();
     
     % calculate the b-matrix
     k = cumsum(G,2)*dt*gamma*2*pi/1000; % 1/mm

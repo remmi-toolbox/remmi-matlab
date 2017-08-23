@@ -114,9 +114,9 @@ data = reshape(data,roalign,rarefactor,length(echotimes),nslice,...
     encmatrix(2)/rarefactor,encmatrix(3),diffImgs,irImgs,mtImgs,nreps);
 
 % reorder
-data = permute(data,[1,2,5,6,3,4,7,8,9]);
+data = permute(data,[1,2,5,6,3,4,7:ndims(data)]);
 data = data(1:encmatrix(1),:,:,:,:,:,:,:,:);
-% format is now [ro,rare,pe1,pe2,echoes,slices,diffImgs,mtImgs,nreps]
+% format is now [ro,rare,pe1,pe2,echoes,slices,diffImgs,irImgs,mtImgs,nreps]
 
 % move to projection space
 proj = fftshift(fft(fftshift(data,1)),1);
@@ -125,7 +125,6 @@ proj = fftshift(fft(fftshift(data,1)),1);
 proj = bsxfun(@times,proj,exp(-1i*(...
     bsxfun(@plus, ph_ref0(1,:,1), bsxfun(@times,(1:encmatrix(1))',ph_ref1)))));
 
-%%
 % back into full fourier space
 data = ifftshift(ifft(ifftshift(proj,1)),1);
 
@@ -148,13 +147,13 @@ end
 % PE1 shift
 np = methpars.PVM_EncMatrix(2);
 line = reshape((1:np) - 1 - round(np/2),1,[]);
-data = bsxfun(@times,data,exp(1i*2*pi*line*methpars.PVM_Phase1Offset/methpars.PVM_Fov(2)));
+data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase1Offset/methpars.PVM_Fov(2)));
 
 % PE2 shift
 if length(methpars.PVM_EncMatrix) > 2
     np = methpars.PVM_EncMatrix(3);
     line = reshape((1:np) - 1 - round(np/2),1,[]);
-    data = bsxfun(@times,data,exp(1i*2*pi*line*methpars.PVM_Phase2Offset/methpars.PVM_Fov(3)));
+    data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase2Offset/methpars.PVM_Fov(3)));
 end
 
 % reconstruct images
@@ -166,6 +165,6 @@ if encmatrix(3) > 1
 end
 img = fftshift(fftshift(fftshift(img,1),2),3);
 
-img = permute(img(:,end:-1:1,:,:,:,:,:,:),[2 1 3 4 5 6 7 8]);
+img = permute(img(:,end:-1:1,:,:,:,:,:,:,:),[2 1 3 4 5 6 7 8 9]);
 
 

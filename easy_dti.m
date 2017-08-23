@@ -9,7 +9,7 @@ imgset.bmat = remmi.vendors.bmatBruker(imgset.pars);
 %% Set a mask based upon the first diffusion-weighted image
 
 % which dimension is diffusion-weighting?
-i = find(strcmp(imgset.labels,'DW'));
+i = find(ismember(imgset.labels,{'DW','NR'}));
 b0img = remmi.util.slice(imgset.img,i,1);
 
 % create a threshold mask
@@ -20,3 +20,4 @@ dtiSet = remmi.dtiAnalysis(imgset);
 
 %% save datasets
 save(['easy_dti_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])
+
