@@ -1,4 +1,4 @@
-function dset = loadImageData(spath,exps)
+function dset = loadImageData(study,exps)
 % dset = loadImageData(spath,exps) loads raw data from recognized 
 %   pre-clinical MRI data formats, and returns reconstructed images and
 %   parameters.
@@ -18,14 +18,15 @@ function dset = loadImageData(spath,exps)
 
 if nargin<1
     disp('Select the study directory');
-    spath = uigetdir([],'Select study directory');
-    if spath == 0
+    study = uigetdir([],'Select study directory');
+    if study == 0
         error('No study path given');
     end
 end
 
-% what vendor is the study?
-study = remmi.vendors.autoVendor(spath);
+if ischar(study)
+    study = remmi.vendors.autoVendor(study);
+end
 
 if nargin<2
     disp('Select the experiment(s)');
@@ -42,13 +43,13 @@ if ~iscell(exps)
 end
 
 % load all the datasets
+dset = struct();
 for n=1:length(exps)
-    [dset(n).img,dset(n).labels,dset(n).pars] = study.load(num2str(exps{n}));
+    [dset.img{n},dset.labels{n},dset.pars{n}] = study.load(num2str(exps{n}));
 end
 
 % check to see if we should combine these datasets
 combine_datasets = false;
-
 
 % Is there only one dataset?
 if length(exps)>1 
@@ -56,7 +57,7 @@ if length(exps)>1
     % Do the parameters have the same structure?
     sameStructure = true;
     try
-        pp = [dset.pars];
+        pp = [dset.pars{:}];
     catch
         % the structures here are disimilar. These data sets should not be
         % combined. 
@@ -70,16 +71,21 @@ if length(exps)>1
         if (numel(seq) == 1)
 
             % Does each dataset have the same label order?
-            labels = arrayfun(@(x) x.labels,dset,'UniformOutput',false);
-            if isequal(labels{:})
+            if isequal(dset.labels{:})
 
                 % Do all datasets have the same size?
-                sz = arrayfun(@(x) size(x.img),dset,'UniformOutput',false);
+                sz = arrayfun(@(x) size(x),dset.img,'UniformOutput',false);
                 if isequal(sz{:})
                     combine_datasets = true;
                 end
             end
         end
+    end
+else
+    % There is only one experiment. Reduce the cell array.
+    names = fieldnames(dset);
+    for n=1:length(names)
+        dset.(names{n}) = dset.(names{n}){1};
     end
 end
 
@@ -89,11 +95,11 @@ if combine_datasets
 
     % concatenate the image data
     catdim = max(length(sz{1})+1,4);
-    img = cat(catdim,dset.img);
-    labels = [dset(1).labels 'EXP'];
+    img = cat(catdim,dset.img{:});
+    labels = [dset.labels{:} 'EXP'];
 
     % concatenate parameters
-    pars = [dset.pars];
+    pars = [dset.pars{:}];
     names = fieldnames(pars(1));
     for n=1:length(names)
         if length(pars(1).(names{n})) > 1
