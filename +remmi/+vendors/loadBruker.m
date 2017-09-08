@@ -151,16 +151,21 @@ if methpars.PVM_NEchoImages>1 && ~isfield(methpars,'RefPulse1')
     end
 end
 
-% PE1 shift
-np = methpars.PVM_EncMatrix(2);
-line = reshape((1:np) - 1 - round(np/2),1,[]);
-data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase1Offset/methpars.PVM_Fov(2)));
+try
+    % PE1 shift
+    np = methpars.PVM_EncMatrix(2);
+    line = reshape((1:np) - 1 - round(np/2),1,[]);
+    data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase1Offset/methpars.PVM_Fov(2)));
 
-% PE2 shift
-if length(methpars.PVM_EncMatrix) > 2
-    np = methpars.PVM_EncMatrix(3);
-    line = reshape((1:np) - 1 - round(np/2),1,1,[]);
-    data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase2Offset/methpars.PVM_Fov(3)));
+    % PE2 shift
+    if length(methpars.PVM_EncMatrix) > 2
+        np = methpars.PVM_EncMatrix(3);
+        line = reshape((1:np) - 1 - round(np/2),1,1,[]);
+        data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase2Offset/methpars.PVM_Fov(3)));
+    end
+catch
+    % todo: implement PE offset correction for PV5
+    warning('PE offsets are uncorrected');
 end
 
 % reconstruct images

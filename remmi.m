@@ -1,4 +1,4 @@
-function imgset = remmi(command)
+function varargout = remmi(command)
 % prototype entry point for general remmi reconstruction
 
 if ~exist('command','var')
@@ -6,43 +6,45 @@ if ~exist('command','var')
 end
 
 rname = 'remmi.mat';
-dat = remmi.util.loaddata(rname);
-
+dat = matfile(rname,'Writable',true);
 dat.githash = remmi.util.githash();
 
-newstudy = strcmpi(command,'study');% user told us to select a new study
-newstudy = newstudy || ~isfield(dat,'spath'); % study path doesn't exist
-if newstudy
-    dat.spath = uigetdir([],'Select study directory');
-end
+proc = dat.process;
 
-disp(['Loading the study at: ' dat.spath]);
-study = remmi.vendors.autoVendor(dat.spath);
-
-newexps = newstudy || strcmpi(command,'exp'); % user told us to select new experiments
-newexps = newexps || ~isfield(dat,'exp'); % exps field doesn't exist
-newexps = newexps || isempty(dat.exp); % exps field is empty
-if newexps 
-    explist = study.list();
-    sel = listdlg('ListString',explist.name);
-    dat.exp = explist.id(sel);
+doproc = false;
+for n=1:length(proc)
+    % doproc = should this process be performed?
+    doproc = doproc || strcmpi(command,proc{n}.name); % user told us to start here
+    doproc = doproc || ~isprop(dat,proc{n}.name); % the field doesn't exist
+    doproc = doproc || isempty(dat.(proc{n}.name)); % field is empty
     
-    % save the dataset info
-    remmi.util.savedata(rname,dat);
-end
-
-iname = 'imgset.mat';
-imgset = remmi.util.loaddata(iname);
-
-recon = newexps || strcmpi(command,'recon'); % user told us to reconstruct
-recon = recon ||  ~isfield(imgset,'img'); % images don't exist
-recon = recon || isempty(imgset.img); % images are empty
-if recon
-    disp(['Loading experiments: ' strjoin(dat.exp,',')]);
-    imgset = remmi.loadImageData(study,dat.exp);
+    if doproc
+        disp(['Begining process: ' proc{n}.name]);
+        
+        % set up input variables
+        in = cell(proc{n}.in);
+        for m=1:numel(proc{n}.in)
+            in{m} = proc{n}.in{m}.data;
+        end
+        
+        % do your business
+        out = proc{n}.function(in);
+        
+        % save the output
+        proc{n}.out.data = out;
+        dat.(proc{n}.name) = out;
+        disp(['Ending process:   ' proc{n}.name]);
+    else
+        % save the previous output
+        proc{n}.out.data = dat.(proc{n}.name);
+    end
     
-    % save the images
-    remmi.util.savedata(iname,imgset);
 end
+
+if nargout == 1
+    varargout{1} = out;
+end
+
+disp('Done!');
 
 end % function

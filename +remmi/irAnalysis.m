@@ -6,6 +6,7 @@ function irSet = irAnalysis(dset,display)
 %       dset.mask = mask for processing data (optional, but speeds up
 %           computation time)
 %       dset.pars = basic remmi parameter set including ti & td. 
+%       dset.labels = cell array of labels to dset.img dimensions
 % 
 %   Returns a data set containing ir parameter maps of M0, T1 (same units
 %   as dset.pars.ti) and flip angle (degrees)

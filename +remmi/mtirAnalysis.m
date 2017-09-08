@@ -6,6 +6,7 @@ function mtirSet = mtirAnalysis(dset,display)
 %       dset.mask = mask for processing data (optional, but speeds up
 %           computation time)
 %       dset.pars = basic remmi parameter set including ti & td. 
+%       dset.labels = cell array of labels to dset.img dimensions
 % 
 %   Returns a data set containing mtir parameter maps of M0a, M0b, BPF, PSR, 
 %   kmf, T1 & confidence interavls.

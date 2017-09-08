@@ -6,6 +6,7 @@ function dtiSet = dtiAnalysis(dset,mode)
 %       dset.mask = mask for processing data (optional, but speeds up
 %           computation time)
 %       dset.bmat = condensed bmatrix in ms/�m^2
+%       dset.labels = cell array of labels to dset.img dimensions
 %       mode = {'linear'}, 'nonlinear'
 % 
 %   Returns a data set containing dti parameter maps of ADC & FA.

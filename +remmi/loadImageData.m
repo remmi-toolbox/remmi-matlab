@@ -96,7 +96,7 @@ if combine_datasets
     % concatenate the image data
     catdim = max(length(sz{1})+1,4);
     img = cat(catdim,dset.img{:});
-    labels = [dset.labels{:} 'EXP'];
+    labels = [dset.labels{1} 'EXP'];
 
     % concatenate parameters
     pars = [dset.pars{:}];

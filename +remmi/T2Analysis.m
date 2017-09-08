@@ -3,9 +3,10 @@ function t2set = T2Analysis(dset,metrics,fitting)
 %   analysis on image data in dset.
 %
 %   T2Analysis(dset):
-%       dset.img = image data in the format (x,y,z,te)
+%       dset.img = image data
 %       dset.mask = mask for processing data
 %       dset.pars = basic remmi parameter set including te
+%       dset.labels = cell array of labels to dset.img dimensions
 %
 %   T2Analysis(dset,metrics)
 %   metrics is a optional structure of function handles that operate on 
@@ -70,9 +71,11 @@ analysis.interactive = 'n';
 
 % define default metrics (MWF, T2 & B1) if none are given
 if ~exist('metrics','var')
-    metrics.MWF = @(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1);
-    metrics.T2  = @(out) sum(out.Fv.*out.Tv,1)./sum(out.Fv,1);
-    metrics.B1  = @(out) out.theta;
+    % using str2func to suppress warnings when anonymous functions are
+    % saved & re-loaded
+    metrics.MWF = str2func('@(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1)');
+    metrics.T2  = str2func('@(out) sum(out.Fv.*out.Tv,1)./sum(out.Fv,1)');
+    metrics.B1  = str2func('@(out) out.theta');
 end
 
 names = fieldnames(metrics);
@@ -134,3 +137,5 @@ end
 t2set.fitting = fout;
 t2set.metrics = metrics;
 t2set.labels = dset.labels(~echoDim);
+
+end
