@@ -1,0 +1,10 @@
+{
+"remmi":
+{
+    "inputs":
+    [
+        {"name":"datfile", "kind":"required",   "type":"filepath=*.mat"},
+        {"name":"command", "kind":"optional",   "type":"char"}
+    ]
+}
+}
