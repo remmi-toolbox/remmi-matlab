@@ -16,7 +16,7 @@ classdef BrukerPV < handle
                 try
                     i1 = strfind(val,'<');
                     i2 = strfind(val,'>');
-                    val = strsplit(val(i1+1:i2-1),',');
+                    val = remmi.util.strsplit(val(i1+1:i2-1),',');
                     time = datenum(val{1},'yyyy-mm-ddTHH:MM:SS');
                 catch
                     time = 0;

@@ -9,7 +9,7 @@ function [fpath,pre,post,fext] = parsename(fname)
 
 [fpath,fname,fext] = fileparts(fname);
 
-parts = strsplit(fname,'_');
+parts = remmi.util.strsplit(fname,'_');
 
 if length(parts)>2
     error('filename not recognized');

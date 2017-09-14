@@ -12,7 +12,7 @@ nB0 = pp.methpars.PVM_DwAoImages;
 nB0end = pp.methpars.REMMI_DwAoImagesEnd;
 nB0begin = nB0 - nB0end;
 
-ref = strsplit(pp.methpars.RefPulse1(2:end-1),',');
+ref = remmi.util.strsplit(pp.methpars.RefPulse1(2:end-1),',');
 refPulseDur = str2double(ref{1});
 tssr = 2*pp.methpars.REMMI_EddyDelay + refPulseDur; % ms
 gssr = pp.methpars.RefSliceGrad*gmax/100; % mT/m

@@ -69,7 +69,7 @@ end
 ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,nreps);
 ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,nreps);
 if isfield(methpars,'REMMI_ProcnoResult')
-    vals = strsplit(methpars.REMMI_ProcnoResult(2:end-1),',');
+    vals = remmi.util.strsplit(methpars.REMMI_ProcnoResult(2:end-1),',');
     [fstudy,~] = fileparts(dataPath);
     ph_fid = fopen(fullfile(fstudy,strtrim(vals{end-1}),'fid'));
     ph_raw = fread(ph_fid,'bit32');
