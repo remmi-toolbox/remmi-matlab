@@ -1,23 +1,20 @@
-function varargout = remmi(procfile,command)
+function varargout = remmi(proc,data,command)
 % WIP entry point for remmi reconstruction/analysis in batch
 %
 % out = remmi(procfile,command)
 %
 %   inputs:
-%   procfile = string path to a .mat file containing a variable named 
-%       'process':
-%           process = a cell array of structures containing:
-%           process.name = the string name of the process
-%           process.in = a cell array of inputs to process.function. These
-%               inputs must be objects of type remmi.dataset
-%           process.function = anonymous function  
-%           process.out = a single remmi.dataset output returned from
-%               process.function
+%   proc = a cell array of structures containing:
+%       proc.name = the string name of the process
+%       proc.in = a cell array of inputs to process.function. These inputs
+%           can (should?) be objects of type remmi.dataset
+%       proc.function = anonymous function  
+%       proc.out = if applicable, a single remmi.dataset output returned 
+%           from process.function
 %
-%   For larger scale batch processing, procfile can also be a cell array
-%   of path names
+%   data = a structure of data to pre-configure any proc
 %       
-%   command = a string listing the name (i.e. process.name) of the 
+%   command = a string listing the name (i.e. proc.name) of the 
 %   process to begin processing. 
 %
 %   outputs:
@@ -31,14 +28,21 @@ function varargout = remmi(procfile,command)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-% must have a procfile. 
-if ~exist('procfile','var')
-    error('no procfile given');
+% must have a list of process. 
+if ~exist('proc','var')
+    error('no proc given');
 end
 
-% converty to a cell array if not already one
-if ~iscell(procfile)
-    procfile = {procfile};
+% no default data
+if ~exist('data','var')
+    data{1}.fname = 'remmi.mat';
+else
+    % default .mat file names
+    for n=1:length(data)
+        if ~isfield(data{n},'fname')
+            data{n}.fname = ['remmi' num2str(n) '.mat'];
+        end
+    end
 end
 
 % no default command
@@ -46,44 +50,42 @@ if ~exist('command','var')
     command = '';
 end
 
-if nargout
-    % if an output is wanted, return one
-    varargout = cell(size(procfile));
-    for n=1:numel(procfile)
-        varargout{n} = remmi_proc(procfile{n},command);
+for n=1:length(data)
+    datfile = remmi.dataset.matfile(data{n}.fname);
+    
+    % pre-load fields from this initial dataset
+    f = fields(data{n});
+    for m=1:length(f)
+        datfile.(f{m}) = data{n}.(f{m});
     end
-else
-    % no output was requested. 
-    for n=1:numel(procfile)
-        remmi_proc(procfile{n},command);
+    
+    if nargout == length(data)
+        varargout{n} = remmi_proc(proc,datfile,command);
+    else
+        remmi_proc(proc,datfile,command);
     end
+    
 end
 
 end
 
-function varargout = remmi_proc(procfile,command)
+function varargout = remmi_proc(proc,datfile,command)
 
 % parse the procfile
-if ischar(procfile)
-    dat = remmi.dataset.matfile(procfile,false);
-elseif isa(procfile,'matlab.io.MatFile')
-    dat = procfile;
-    procfile = procfile.Properties.Source;
+if ischar(datfile)
+    
+elseif isa(datfile,'matlab.io.MatFile')
+    dat = datfile;
+    datfile = datfile.Properties.Source;
 else
     error('"procfile" not recognized');
 end
 
 % save information about this call & version of remmi
-info.input_matfile = procfile;
+info.remmi_proc = proc;
 info.remmi_githash = remmi.util.githash();
 info.remmi_version = remmi.version();
 dat.info = info;
-
-try
-    proc = dat.process;
-catch
-    error('procfile does not seem to be valid')
-end
 
 doproc = false;
 for n=1:length(proc)
