@@ -4,11 +4,16 @@ function process = dti()
 % load in the default reconstruction pipeline
 process = remmi.proc.recon();
 
-% to do: add bmatrix
-error('this is not complete')
+% add bmatrix
+idx = numel(process)+1;
+
+process{idx}.name = 'bmatrix';
+process{idx}.in = {process{idx-1}.out};
+process{idx}.function = @(a) remmi.util.addbmatrix(a{:});
+process{idx}.out = process{idx-1}.out;
 
 % add dti
-idx = numel(process)+1;
+idx = idx+1;
 dti = remmi.dataset('dti');
 
 process{idx}.name = 'dti';

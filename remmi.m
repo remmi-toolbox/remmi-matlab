@@ -1,16 +1,18 @@
-function varargout = remmi(proc,data,command)
+function varargout = remmi(info,command)
 % WIP entry point for remmi reconstruction/analysis in batch
 %
-% out = remmi(procfile,command)
+% out = remmi(info)
 %
 %   inputs:
-%   proc = a cell array of structures containing:
-%       proc.name = the string name of the process
-%       proc.in = a cell array of inputs to process.function. These inputs
-%           can (should?) be objects of type remmi.dataset
-%       proc.function = anonymous function  
-%       proc.out = if applicable, a single remmi.dataset output returned 
-%           from process.function
+%   info
+%       info.proc = a cell array of structures containing:
+%           proc.name = the string name of the process
+%           proc.in = a cell array of inputs to process.function. These inputs
+%               can (should?) be objects of type remmi.dataset
+%           proc.function = anonymous function  
+%           proc.out = if applicable, a single remmi.dataset output returned 
+%               from process.function
+%       info.fname = .mat filename to store the data
 %
 %   data = a structure of data to pre-configure any proc
 %       
@@ -28,21 +30,14 @@ function varargout = remmi(proc,data,command)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-% must have a list of process. 
-if ~exist('proc','var')
-    error('no proc given');
+% must have a some info to start with. 
+if ~exist('info','var')
+    error('no info given');
 end
 
-% no default data
-if ~exist('data','var')
-    data{1}.fname = 'remmi.mat';
-else
-    % default .mat file names
-    for n=1:length(data)
-        if ~isfield(data{n},'fname')
-            data{n}.fname = ['remmi' num2str(n) '.mat'];
-        end
-    end
+% make sure this is a cell array
+if ~iscell(info)
+    info = {info};
 end
 
 % no default command
@@ -50,19 +45,33 @@ if ~exist('command','var')
     command = '';
 end
 
-for n=1:length(data)
-    datfile = remmi.dataset.matfile(data{n}.fname);
+% loop through processing steps
+for n=1:length(info)
+    % must have a list of processes. 
+    if ~isfield(info{n},'proc')
+        warning('no proc given, using basic reconstruction');
+        info{n}.proc = remmi.proc.recon();
+    end
+
+    % no default data
+    if ~isfield(info{n},'fname')
+        info{1}.fname = ['remmi.mat' num2str(n) 'mat'];
+    end
+
+    datfile = remmi.dataset.matfile(info{n}.fname);
     
     % pre-load fields from this initial dataset
-    f = fields(data{n});
+    f = fields(info{n});
     for m=1:length(f)
-        datfile.(f{m}) = data{n}.(f{m});
+        if ~isempty(info{n}.(f{m}))
+            datfile.(f{m}) = info{n}.(f{m});
+        end
     end
     
-    if nargout == length(data)
-        varargout{n} = remmi_proc(proc,datfile,command);
+    if nargout == length(info)
+        varargout{n} = remmi_proc(info{n}.proc,datfile,command);
     else
-        remmi_proc(proc,datfile,command);
+        remmi_proc(info{n}.proc,datfile,command);
     end
     
 end
@@ -72,9 +81,7 @@ end
 function varargout = remmi_proc(proc,datfile,command)
 
 % parse the procfile
-if ischar(datfile)
-    
-elseif isa(datfile,'matlab.io.MatFile')
+if isa(datfile,'matlab.io.MatFile')
     dat = datfile;
     datfile = datfile.Properties.Source;
 else
