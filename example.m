@@ -39,4 +39,6 @@ info{idx}.proc = remmi.proc.dti(); % standard remmi dti processing
 
 
 %% process data
+tic
 remmi(info)
+toc

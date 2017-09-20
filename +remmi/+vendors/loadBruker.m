@@ -79,22 +79,33 @@ if isfield(methpars,'REMMI_ProcnoResult')
         % real + imaginary
         ph_raw = reshape(ph_raw,2,length(ph_raw)/2);
         ph_raw = ph_raw(1,:) + 1i*ph_raw(2,:);
+        
+        % related to bruker encoding workaround
+        navg = max(8/rarefactor*length(echotimes),1);
 
-        % set format to [readout, echo]
+        % set format to [readout, echo, etc]
+        ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),navg,nslice, ...
+            diffImgs,1,1,nreps);
+        
+        % bruker encoding workaround
+        ph_raw = sum(ph_raw,3);
         ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),nslice, ...
             diffImgs,1,1,nreps);
+        
         ph_raw = ph_raw(1:encmatrix(1),:);
 
-        [~,idx] = max(abs(ph_raw(:,1)));
-        rng = (-1:1) + idx;
-        ph_ref0 = angle(sum(ph_raw(rng,:),1));
-        ph_ref1 = zeros(size(ph_ref0));
+        % 0th order phase correction
+        % [~,idx] = max(abs(ph_raw(:,1)));
+        % rng = (-1:1) + idx;
+        % ph_ref0 = angle(sum(ph_raw(rng,:),1));
+        % ph_ref1 = zeros(size(ph_ref0));
 
-        if isfield(methpars,'REMMI_DwiOnOff')
-            if strcmp(methpars.REMMI_DwiOnOff,'Yes')
-                [ph_ref0,ph_ref1] = dwi_phase_corr(ph_raw);
-            end
-        end
+        %if isfield(methpars,'REMMI_DwiOnOff')
+        %    if strcmp(methpars.REMMI_DwiOnOff,'Yes')
+        % 0 & 1st order phase correction
+        [ph_ref0,ph_ref1] = dwi_phase_corr(ph_raw);
+        %    end
+        %end
 
         ph_ref0 = reshape(ph_ref0,[1 rarefactor 1 1 length(echotimes) ...
             nslice diffImgs 1 1 nreps]);
@@ -134,7 +145,7 @@ data = remmi.util.slice(data,1,1:encmatrix(1));
 proj = fftshift(fft(fftshift(data,1)),1);
 
 % correct for 0th & first order phase
-proj = bsxfun(@times,proj,exp(1i*(...
+proj = bsxfun(@times,proj,exp(-1i*(...
     bsxfun(@plus, ph_ref0, bsxfun(@times,(1:encmatrix(1))',ph_ref1)))));
 
 % back into full fourier space
