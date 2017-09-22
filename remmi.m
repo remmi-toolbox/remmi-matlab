@@ -107,7 +107,9 @@ for n=1:length(proc)
         % set up input variables
         in = cell(proc{n}.in);
         for m=1:numel(proc{n}.in)
-            in{m} = proc{n}.in{m}.data;
+            if isa(proc{n}.in{m},'remmi.dataset')
+                in{m} = proc{n}.in{m}.data;
+            end
         end
         
         % do your business

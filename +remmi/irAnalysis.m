@@ -72,9 +72,9 @@ for n=1:numel(mask)
         sig = squeeze(abs(data(:,n)));
 
         % initial guess & bounds
-        b0 = [max(sig), 400, 150]; 
-        lb = [       0,   0,   0];
-        ub = [     inf, inf, 180];
+        b0 = [max(sig), 0.400, 150]; 
+        lb = [       0,     0,   0];
+        ub = [     inf,   inf, 180];
 
         % fit the data
         opts = optimset('display',display);

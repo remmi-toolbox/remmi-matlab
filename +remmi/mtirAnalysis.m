@@ -25,8 +25,8 @@ if ~any(mtDim)
 end
 
 % load in the needed parameters
-ti = dset.pars.ti/1000;
-td = dset.pars.td/1000;
+ti = dset.pars.ti; % sec
+td = dset.pars.td; % sec
 
 if numel(ti)<6
     error('There are not enough inversion times in this datatset for MTIR analysis')

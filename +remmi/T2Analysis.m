@@ -12,9 +12,9 @@ function t2set = T2Analysis(dset,metrics,fitting)
 %   metrics is a optional structure of function handles that operate on 
 %   the output structure of MERA. The default metrics are the MWF, T2 and 
 %   B1:
-%       metrics.MWF = @(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1);
-%       metrics.T2  = @(out) sum(out.Fv.*out.Tv,1)./sum(out.Fv,1);
-%       metrics.B1  = @(out) out.theta;
+%       metrics.MWF  = @(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1);
+%       metrics.gmT2 = @(out) exp(sum(out.Fv.*log(out.Tv),1)./sum(out.Fv,1))
+%       metrics.B1   = @(out) out.theta;
 %
 %   T2Analysis(dset,metrics,fitting)
 %   fitting is passed directly to MERA for multi-exponential T2/EPG 
@@ -46,7 +46,7 @@ if ~any(echoDim)
 end
 
 % get the echo times
-in.t = dset.pars.te/1000;
+in.t = dset.pars.te; % sec
 
 % define a mask if one is not given
 if isfield(dset,'mask')
@@ -73,9 +73,9 @@ analysis.interactive = 'n';
 if ~exist('metrics','var')
     % using str2func to suppress warnings when anonymous functions are
     % saved & re-loaded
-    metrics.MWF = str2func('@(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1)');
-    metrics.T2  = str2func('@(out) sum(out.Fv.*out.Tv,1)./sum(out.Fv,1)');
-    metrics.B1  = str2func('@(out) out.theta');
+    metrics.MWF  = str2func('@(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1)');
+    metrics.gmT2 = str2func('@(out) exp(sum(out.Fv.*log(out.Tv),1)./sum(out.Fv,1))');
+    metrics.B1   = str2func('@(out) out.theta');
 end
 
 names = fieldnames(metrics);

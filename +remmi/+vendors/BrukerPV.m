@@ -107,25 +107,25 @@ classdef BrukerPV < handle
             % set the basic remmi experimental parameters
             % echo time
             if isfield(methpars,'EffectiveTE')
-                pars.te = methpars.EffectiveTE;
+                pars.te = methpars.EffectiveTE(:)/1000; % s
             else
-                pars.te = methpars.PVM_EchoTime;
+                pars.te = methpars.PVM_EchoTime(:)/1000; % s
             end
             pars.nte = methpars.PVM_NEchoImages;
             
             % TR
-            pars.tr = methpars.PVM_RepetitionTime;
+            pars.tr = methpars.PVM_RepetitionTime(:)/1000; % s
             if isfield(methpars,'REMMI_MtIrTimeArr')
-                pars.ti = methpars.REMMI_MtIrTimeArr;
+                pars.ti = methpars.REMMI_MtIrTimeArr(:)/1000; % s
             elseif isfield(methpars,'InversionTime')
-                pars.ti = methpars.InversionTime;
+                pars.ti = methpars.InversionTime(:)/1000; % s
             end
             
             % TD, if exists
             if isfield(methpars,'REMMI_MtTDTime')
-                pars.td = methpars.REMMI_MtTDTime;
+                pars.td = methpars.REMMI_MtTDTime(:)/1000; % s
             elseif isfield(methpars,'RepetitionDelayTime')
-                pars.td = methpars.RepetitionDelayTime;
+                pars.td = methpars.RepetitionDelayTime(:)/1000; % s
             end
             
             % for offset MT sequences, what is the range in frequence
