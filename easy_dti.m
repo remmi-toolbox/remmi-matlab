@@ -1,23 +1,20 @@
 clearvars
 
-%% read in & reconstruct image data
-imgset = remmi.loadImageData();
+% List the study path and experiments to process
+info.spath = './data/mt';
+info.exps = 29;
+
+% specify where the data will be stored
+dset = remmi.dataset('easy_dti.mat');
+
+%% dti processing
+dset.images = remmi.recon(info);
 
 % and b-matrix
-imgset.bmat = remmi.vendors.bmatBruker(imgset.pars);
+dset.images.bmat = remmi.dwi.addbmatrix(dset.images);
 
-%% Set a mask based upon the first diffusion-weighted image
+% Set a mask 
+dset.images = remmi.util.thresholdmask(dset);
 
-% which dimension is diffusion-weighting?
-i = find(ismember(imgset.labels,{'DW','NR'}));
-b0img = remmi.util.slice(imgset.img,i,1);
-
-% create a threshold mask
-imgset.mask = abs(b0img)./max(abs(b0img(:))) > 0.1;
-
-%% perform MTIR analysis
-dtiSet = remmi.dtiAnalysis(imgset);
-
-%% save datasets
-save(['easy_dti_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])
-
+% perform DTI analysis
+dset.dti = remmi.dwi.dti(dset.images);

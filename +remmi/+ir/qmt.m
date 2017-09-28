@@ -1,5 +1,5 @@
-function mtirSet = mtirAnalysis(dset,display)
-% mtirSet = mtirAnalysis(dset) performs MTIR analysis on the dataset: 
+function mtirSet = qmt(dset,varargin)
+% mtirSet = remmi.ir.qmt(dset) performs MTIR analysis on the dataset: 
 %
 %   mtirAnalysis(dset,display)
 %       dset.img = image data in the format (x,y,z,ti) (constant td)
@@ -15,7 +15,18 @@ function mtirSet = mtirAnalysis(dset,display)
 % for the REMMI Toolbox
 
 % load in the dataset
-sz = size(dset.img); 
+
+[name,init,display] = setoptions(varargin{:});
+
+if ~exist('dset','var')
+    dset = struct();
+end
+
+if ~isfield(dset,name) || isempty(dset.(name))
+    dset = remmi.util.thresholdmask(remmi.recon(dset));
+end
+
+sz = size(dset.(name)); 
 
 % what dimension is MT encoding?
 mtDim = ismember(dset.labels,'IR');
@@ -43,10 +54,6 @@ else
     mask = squeeze(true(sz(~mtDim)));
 end
 
-if ~exist('display','var')
-    display = 'off';
-end
-
 % initialize the mtir dataset
 mtirSet.M0a = zeros(size(mask));
 mtirSet.M0b = zeros(size(mask));
@@ -62,8 +69,8 @@ tot_evals = sum(mask(:));
 evals = 0;
 
 % make the MT dimension the first index. 
-idx = 1:numel(size(dset.img));
-data = permute(dset.img,[idx(mtDim) idx(~mtDim)]);
+idx = 1:ndims(dset.(name));
+data = permute(dset.(name),[idx(mtDim) idx(~mtDim)]);
 
 warning('off','MATLAB:singularMatrix')
 
@@ -74,13 +81,13 @@ for n=1:numel(mask)
         sig = squeeze(abs(data(:,n)));
 
         % initial guess & bounds
-        b0 = [max(sig), max(sig)/10,        50,   2, -0.9]; 
-        lb = [       0,           0,         2,   0,  -1];
-        ub = [     inf,         inf, 1/min(ti), inf,   1];
+        b0 = init.b0(sig);
+        lb = init.lb(sig);
+        ub = init.ub(sig);
 
         % fit the data
         opts = optimset('display',display);
-        [b,~,res,~,~,~,jac] = lsqnonlin(@(x) remmi.util.sir(x,ti',td)-sig,b0,lb,ub,opts);
+        [b,~,res,~,~,~,jac] = lsqnonlin(@(x) remmi.ir.sir(x,ti',td)-sig,b0,lb,ub,opts);
 
         % load the dataset
         mtirSet.M0a(n)=b(1);
@@ -104,3 +111,18 @@ fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
 warning('on','MATLAB:singularMatrix')
 
 
+function [name,init,display] = setoptions(name,init,display)
+
+if ~exist('name','var') || isempty(name)
+    name = 'img';
+end
+
+if ~exist('init','var') || isempty(init)
+    init.b0 = str2func('@(sig) [max(sig), max(sig)/10,  50,   2, -0.9]');
+    init.lb = str2func('@(sig) [       0,           0,   2,   0,  -1]');
+    init.ub = str2func('@(sig) [     inf,         inf, 200, inf,   1]');
+end
+
+if ~exist('display','var') || isempty(display)
+    display = 'off';
+end

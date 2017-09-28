@@ -1,4 +1,4 @@
-function img = loadBruker(dataPath,methpars)
+function img = loadBruker(dataPath,methpars,options)
 % img = loadBruker(dataPath)
 % loads raw data from Bruker acquisitions & reconstructs images 
 %
@@ -185,7 +185,7 @@ catch
 end
 
 % reconstruct images
-data = remmi.util.apodize(data,0.25);
+data = options.apodize_fn(data);
 data = fftshift(fftshift(fftshift(data,1),2),3);
 img = fft(fft(data,encmatrix(1),1),encmatrix(2),2);
 if encmatrix(3) > 1

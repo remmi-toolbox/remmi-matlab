@@ -1,19 +1,19 @@
 clearvars
 
-%% read in & reconstruct image data
-imgset = remmi.loadImageData();
+% List the study path and experiments to process
+info.spath = './data/mt';
+info.exps = 29;
 
-%% Set a mask based upon the last inversion image
+% specify where the data will be stored
+dset = remmi.dataset('easy_mtir.mat');
 
-% which dimension is IR?
-i = find(strcmp(imgset.labels,'IR'));
-img = remmi.util.slice(imgset.img,i,size(imgset.img,i));
+%% MTIR analysis
 
-% create a threshold mask
-imgset.mask = abs(img)./max(abs(img(:))) > 0.1;
+% reconstruct the images
+dset.images = remmi.recon(info);
 
-%% process MTIR
-qmt = remmi.mtirAnalysis(mtir);
+% Set a mask
+dset.images = remmi.util.thresholdmask(dset.images);
 
-%% save datasets
-save(['easy_mt_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])
+% process MTIR
+dset.mtir = remmi.ir.qmt(dset.images);

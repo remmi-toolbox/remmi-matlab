@@ -63,7 +63,7 @@ data = permute(dset.img,[idx(irDim) idx(~irDim)]);
 
 warning('off','MATLAB:singularMatrix')
 
-t1fun = @(x) abs(remmi.util.ir(x,ti(:),ti(:)+td));
+t1fun = @(x) abs(remmi.ir.ir(x,ti(:),ti(:)+td));
 
 fprintf('%3.0f %% done...',0);
 for n=1:numel(mask)

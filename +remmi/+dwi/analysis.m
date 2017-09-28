@@ -1,5 +1,5 @@
-function dtiSet = dtiAnalysis(dset,mode)
-% dtiSet = dtiAnalysis(dset) performs DTI analysis on the dataset: 
+function dtiSet = analysis(dset,mode)
+% dtiSet = remmi.dwi.analysis(dset) performs DTI analysis on the dataset: 
 %
 %   dtiAnalysis(dset)
 %       dset.img = image data in the format (x,y,z,:,diff) (constant td)

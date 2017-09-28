@@ -1,11 +1,13 @@
-function dset = loadImageData(study,exps)
-% dset = loadImageData(spath,exps) loads raw data from recognized 
+function dset = recon(dset,options)
+% dset = recon(spath,exps) loads raw data from recognized 
 %   pre-clinical MRI data formats, and returns reconstructed images and
 %   parameters.
 %   
 % optional inputs:
 %   spath = string path to a study stored in a recognized vender format
 %   exps = list of experiments to reconstruct within spath 
+%   options.apodize_fn = function to apodize data
+%   options.matrix_sz = reconstruction size (by zero padding)
 %
 % output:
 %   dset = a structure (or array of structures) containing:
@@ -17,18 +19,21 @@ function dset = loadImageData(study,exps)
 % for the REMMI Toolbox
 
 if nargin<1
+    dset = struct();
+end
+
+if ~isfield(dset,'spath') || isempty(dset.spath)
     disp('Select the study directory');
-    study = uigetdir([],'Select study directory');
-    if study == 0
+    dset.spath = uigetdir([],'Select study directory');
+    if dset.spath == 0
         error('No study path given');
     end
+    disp(['The study path is: ' dset.spath]);
 end
 
-if ischar(study)
-    study = remmi.vendors.autoVendor(study);
-end
+study = remmi.vendors.autoVendor(dset.spath);
 
-if nargin<2
+if ~isfield(dset,'exps') || isempty(dset.exps)
     disp('Select the experiment(s)');
     exps = study.list();
     sel = listdlg('ListString',exps.name);
@@ -36,16 +41,26 @@ if nargin<2
     if isempty(exps)
         error('No experiments specified in %s',spath);
     end
+else
+    exps = dset.exps;
 end
+
+% set the default reconstruction options
+if nargin<3
+    options = struct();
+end
+options = remmi.recon.options(options);
 
 if ~iscell(exps)
     exps = num2cell(exps);
 end
 
+dset.exps = exps;
+
 % load all the datasets
-dset = struct();
 for n=1:length(exps)
-    [dset.img{n},dset.labels{n},dset.pars{n}] = study.load(num2str(exps{n}));
+    [dset.img{n},dset.labels{n},dset.pars{n}] = study.load(num2str(exps{n}),options);
+    dset.imgsize{n} = size(dset.img{n});
 end
 
 % check to see if we should combine these datasets
@@ -85,7 +100,9 @@ else
     % There is only one experiment. Reduce the cell array.
     names = fieldnames(dset);
     for n=1:length(names)
-        dset.(names{n}) = dset.(names{n}){1};
+        if iscell(dset.(names{n}))
+            dset.(names{n}) = dset.(names{n}){1};
+        end
     end
 end
 
@@ -129,6 +146,7 @@ if combine_datasets
 
     dset = struct();
     dset.img = img;
+    dset.imgsize = size(dset.img);
     dset.pars = par;
     dset.labels = labels;
 end

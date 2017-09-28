@@ -1,19 +1,17 @@
 clearvars
 
-%% read in & reconstruct image data
-imgset = remmi.loadImageData();
+% List the study path and experiments to process
+info.spath = '/path/to/study';
+info.exps = 4;
 
-%% Set a mask based upon the first echo time image
+% specify where the data will be stored
+dset = remmi.dataset('easy_t2.mat');
 
-% which dimension is NE?
-i = find(strcmp(imgset.labels,'NE'));
-te1img = remmi.util.slice(imgset.img,i,1);
+%% MSE EPG
+dset.imgset = remmi.recon(info);
 
-% create a threshold mask
-imgset.mask = abs(te1img)./max(abs(te1img(:))) > 0.1;
+% Set a mask based upon the first echo time image
+dset.imgset = remmi.util.thresholdmask(dset.imgset);
 
-%% Process multi-TE data
-t2set = remmi.T2Analysis(imgset);
-
-%% save datasets
-save(['easy_t2_' datestr(now,'yyyy.mm.dd.HH.MM.SS') '.mat'])
+% Process multi-TE data
+dset.epg = remmi.mse.mT2(imgset);

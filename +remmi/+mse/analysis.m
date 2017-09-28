@@ -1,6 +1,6 @@
-function t2set = T2Analysis(dset,metrics,fitting)
-% t2set = T2Analysis(dset,metrics,fitting) performs multi-exponential T2 
-%   analysis on image data in dset.
+function t2set = analysis(dset,varargin)
+% t2set = remmi.mse.analysis(dset,metrics,fitting) performs multi-exponential T2 
+%   analysis on image data in a dataset.
 %
 %   T2Analysis(dset):
 %       dset.img = image data
@@ -34,8 +34,10 @@ function t2set = T2Analysis(dset,metrics,fitting)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-sz = size(dset.img); 
+% by default, use epg options
+[metrics,fitting,manalysis,name] = remmi.mse.mT2options(varargin{:});
 
+sz = size(dset.(name)); 
 seg_sz = 256; % number of multi-echo measurements to process at one time
 
 % what dimension is multiple echoes?
@@ -55,35 +57,12 @@ else
     mask = squeeze(true(prod(sz(~echoDim),1)));
 end
 
-% define the default fitting parameters if none are given
-if ~exist('fitting','var')
-    fitting.regtyp = 'mc';
-    fitting.regadj='manual';
-    fitting.regweight=0.0005; 
-    fitting.B1fit = 'y';
-    fitting.rangetheta=[135 180];
-    fitting.numbertheta=10;
-    fitting.numberT = 100;
-    fitting.rangeT = [in.t(1)/2 .5];
-end
-analysis.graph = 'n';
-analysis.interactive = 'n';
-
-% define default metrics (MWF, T2 & B1) if none are given
-if ~exist('metrics','var')
-    % using str2func to suppress warnings when anonymous functions are
-    % saved & re-loaded
-    metrics.MWF  = str2func('@(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1)');
-    metrics.gmT2 = str2func('@(out) exp(sum(out.Fv.*log(out.Tv),1)./sum(out.Fv,1))');
-    metrics.B1   = str2func('@(out) out.theta');
-end
-
 names = fieldnames(metrics);
 maps = cell([length(names) sz(~echoDim)]);
 
 % put the NE dim first
-idx = 1:numel(size(dset.img));
-data = permute(dset.img,[idx(echoDim) idx(~echoDim)]);
+idx = 1:numel(size(dset.(name)));
+data = permute(dset.(name),[idx(echoDim) idx(~echoDim)]);
 
 % linear index to all the vectors to process
 mask_idx = find(mask);
@@ -100,7 +79,7 @@ for seg=1:nseg
     in.D = abs(data(:,mask_idx(segmask)));
 
     % process the data in MERA
-    [out,fout] = remmi.MERA.MERA(in,fitting,analysis);
+    [out,fout] = remmi.mse.MERA.MERA(in,fitting,manalysis);
 
     % compute all of the metrics required
     for m=1:length(names)
