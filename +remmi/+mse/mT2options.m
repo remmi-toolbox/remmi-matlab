@@ -1,4 +1,7 @@
 function [metrics,fitting,analysis,name] = mT2options(metrics,fitting,analysis,name)
+% [metrics,fitting,analysis,name] = mT2options(metrics,fitting,analysis,name)
+% sets default 
+%
 
 if ~exist('metrics','var') || isempty(metrics)
     % using str2func to suppress warnings when anonymous functions are

@@ -1,12 +1,16 @@
-function irSet = irAnalysis(dset,display)
-% irSet = irAnalysis(dset) performs IR analysis on the dataset: 
+function irSet = T1(dset,varargin)
+% irSet = remmi.ir.T1(dset,name) performs inversion recovery analysis on 
+% the dataset: 
 %
-%   irAnalysis(dset,display)
-%       dset.img = image data in the format (x,y,z,ti) (constant td)
-%       dset.mask = mask for processing data (optional, but speeds up
-%           computation time)
+%       dset.(name) = data to process
+%       dset.mask = mask for processing data
 %       dset.pars = basic remmi parameter set including ti & td. 
 %       dset.labels = cell array of labels to dset.img dimensions
+%
+%       if dset or dset.(name) is not given, default reconstruction and
+%       thresholding methods are called
+%
+%       name = name of field in dset to fit. Default is 'img'
 % 
 %   Returns a data set containing ir parameter maps of M0, T1 (same units
 %   as dset.pars.ti) and flip angle (degrees)
@@ -14,8 +18,18 @@ function irSet = irAnalysis(dset,display)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
+name = setoptions(varargin{:});
+
+if ~exist('dset','var')
+    dset = struct();
+end
+
+if ~isfield(dset,name) || isempty(dset.(name))
+    dset = remmi.util.thresholdmask(remmi.recon(dset));
+end
+
 % load in the dataset
-sz = size(dset.img); 
+sz = size(dset.(name)); 
 
 % what dimension is MT encoding?
 irDim = ismember(dset.labels,'IR');
@@ -43,10 +57,6 @@ else
     mask = squeeze(true(sz(~irDim)));
 end
 
-if ~exist('display','var')
-    display = 'off';
-end
-
 % initialize the mtir dataset
 irSet.M0 = zeros(size(mask));
 irSet.T1 = zeros(size(mask));
@@ -58,8 +68,8 @@ tot_evals = sum(mask(:));
 evals = 0;
 
 % make the MT dimension the first index. 
-idx = 1:numel(size(dset.img));
-data = permute(dset.img,[idx(irDim) idx(~irDim)]);
+idx = 1:numel(size(dset.(name)));
+data = permute(dset.(name),[idx(irDim) idx(~irDim)]);
 
 warning('off','MATLAB:singularMatrix')
 
@@ -77,7 +87,7 @@ for n=1:numel(mask)
         ub = [     inf,   inf, 180];
 
         % fit the data
-        opts = optimset('display',display);
+        opts = optimset('display','off');
         [b,~,res,~,~,~,jac] = lsqnonlin(@(x) t1fun(x)-sig(:),b0,lb,ub,opts);
 
         % load the dataset
@@ -97,4 +107,12 @@ fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
 
 warning('on','MATLAB:singularMatrix')
 
+end
 
+function [name] = setoptions(name)
+
+if ~exist('name','var') || isempty(name)
+    name = 'img';
+end
+
+end

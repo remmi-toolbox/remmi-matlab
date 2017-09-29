@@ -1,4 +1,6 @@
 classdef BrukerPV < handle
+    % BrukerPV is a class used to identify and reconstruct Bruker
+    % Paravision datasets and images. 
     properties
         path
         labels= {'RO','PE1','PE2','NE','NS','DW','IR','MT','NR'};

@@ -1,5 +1,5 @@
 function ver = version()
-% ver = version()
+% ver = remmi.version()
 % 
 %   returns a char array showing the current remmi-matlab version number.
 %

@@ -2,7 +2,7 @@ function hash = githash()
 % hash = githash()
 % 
 %   returns the short hash for the current git commited version of REMMI.
-%   An error is thrown if no hash is found
+%   A warning is thrown if no hash is found
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox

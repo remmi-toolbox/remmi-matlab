@@ -1,6 +1,6 @@
 function [adc,fa,vec,eign] = dtinonlin(sig,bmat)
-% function [adc,fa,vec,eign] = dtinonlin(sig,bmat) performes non-linear DTI 
-% analysis
+% function [adc,fa,vec,eign] = dtinonlin(sig,bmat) performes non-linear  
+% diffusion tensor analysis
 %   sig = diffusion-weighted signal
 %   bmat = matrix given as [Dxx,Dyy,Dzz,Dxy,Dxz,Dyz;...]'
 % 

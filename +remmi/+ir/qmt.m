@@ -1,12 +1,17 @@
 function mtirSet = qmt(dset,varargin)
-% mtirSet = remmi.ir.qmt(dset) performs MTIR analysis on the dataset: 
+% mtirSet = remmi.ir.qmt(dset,name,init) performs MTIR analysis on 
+% the data in dset: 
 %
-%   mtirAnalysis(dset,display)
-%       dset.img = image data in the format (x,y,z,ti) (constant td)
-%       dset.mask = mask for processing data (optional, but speeds up
-%           computation time)
+%       dset.(name) = data to process
+%       dset.mask = mask for processing data
 %       dset.pars = basic remmi parameter set including ti & td. 
 %       dset.labels = cell array of labels to dset.img dimensions
+%
+%       if dset or dset.(name) is not given, default reconstruction and
+%       thresholding methods are called
+%
+%       name = name of field in dset to fit. Default is 'img'
+%       init = inital values and lower & upper bounds used for fitting
 % 
 %   Returns a data set containing mtir parameter maps of M0a, M0b, BPF, PSR, 
 %   kmf, T1 & confidence interavls.
@@ -16,7 +21,7 @@ function mtirSet = qmt(dset,varargin)
 
 % load in the dataset
 
-[name,init,display] = setoptions(varargin{:});
+[name,init] = setoptions(varargin{:});
 
 if ~exist('dset','var')
     dset = struct();
@@ -50,6 +55,9 @@ end
 % define a mask if one is not given
 if isfield(dset,'mask')
     mask = squeeze(dset.mask);
+    
+    % apply the mask across all non-MT dimensions
+    mask = bsxfun(@times,mask,ones(sz(~mtDim)));
 else
     mask = squeeze(true(sz(~mtDim)));
 end
@@ -86,7 +94,7 @@ for n=1:numel(mask)
         ub = init.ub(sig);
 
         % fit the data
-        opts = optimset('display',display);
+        opts = optimset('display','off');
         [b,~,res,~,~,~,jac] = lsqnonlin(@(x) remmi.ir.sir(x,ti',td)-sig,b0,lb,ub,opts);
 
         % load the dataset
@@ -110,8 +118,9 @@ fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
 
 warning('on','MATLAB:singularMatrix')
 
+end
 
-function [name,init,display] = setoptions(name,init,display)
+function [name,init] = setoptions(name,init)
 
 if ~exist('name','var') || isempty(name)
     name = 'img';
@@ -123,6 +132,4 @@ if ~exist('init','var') || isempty(init)
     init.ub = str2func('@(sig) [     inf,         inf, 200, inf,   1]');
 end
 
-if ~exist('display','var') || isempty(display)
-    display = 'off';
 end

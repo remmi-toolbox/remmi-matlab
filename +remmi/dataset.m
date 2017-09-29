@@ -1,6 +1,14 @@
 classdef dataset < dynamicprops
     % remmi.dataset is a general container for any kind of data, especially  
-    % given or returned from a remmi process. 
+    % given or returned from a remmi process. This class can effectively be
+    % used the same way as a matlab structure, except the data is
+    % simultaneously stored in the filename given to the constructor. This
+    % class should be more efficient than matfile, as the data is also
+    % stored in memory.
+    %
+    % Example:
+    % dset = remmi.dataset('test.mat');
+    % dset.noise = randn(100);
     %
     % Kevin Harkins & Mark Does, Vanderbilt University
     % for the REMMI Toolbox
@@ -46,7 +54,7 @@ classdef dataset < dynamicprops
                 fields = fieldnames(initdata);
                 
                 for n=1:length(fields)
-                    obj.add(fields{n},data.(fields{n}));
+                    obj.add(fields{n},initdata.(fields{n}));
                 end
             end
         end

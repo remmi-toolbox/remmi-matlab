@@ -1,14 +1,15 @@
 function dset = thresholdmask(dset,varargin)
-% dset = remmi.util.thresholdmask(dset,val,label)
+% dset = remmi.util.thresholdmask(dset,val,label,name)
 %   adds a threshold mask to dset
 %
-%       dset = structure or remmi dataet containing:
-%           dset.img = image data 
+%       dset = structure or remmi data containing:
+%           dset.(name) = image data 
 %           dset.labels = cell array of labels to dset.img dimensions
 %       val = relative threshold value as a fraction of 
-%           max(abs(dset.img(:))). Default is 0.1
-%       label = cell array of labels to mask through. Default is ...
-%           {'IR','NE','DW','NR'}
+%           max(abs(dset.(name)(:))). Default is 0.1
+%       label = cell array of labels to create the  mask from. Default is
+%           {'RO','PE1','PE2'}
+%       name = name of field in dset to threshold. Default is 'img'
 %
 %       output: dset contains all of the original contents, plus dset.mask
 %
@@ -26,8 +27,8 @@ if ~isfield(dset,name) || isempty(dset.(name))
 end
 
 % which dimension(s) to slice?
-i = ismember(dset.labels,label);
-img = remmi.util.slice(dset.img,i,1);
+i = ~ismember(dset.labels,label);
+img = remmi.util.slice(dset.(name),i,1);
 
 % create a threshold mask
 dset.mask = abs(img)./max(abs(img(:))) > val;
@@ -40,7 +41,7 @@ if ~exist('val','var') || isempty(val)
     val = 0.1;
 end
 if ~exist('label','var') || isempty(label)
-    label = {'IR','NE','DW','NR'};
+    label = {'RO','PE1','PE2'};
 end
 if ~exist('name','var') || isempty(name)
     name = 'img';

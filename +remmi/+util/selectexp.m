@@ -5,7 +5,7 @@ function exps = selectexp(study)
 %       study = char array containg the path to a valid study or a vendor
 %           specific study class
 %
-%       exp = list of selected experiments within the study
+%       exps = list of selected experiments within the study
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox

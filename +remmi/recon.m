@@ -1,13 +1,12 @@
 function dset = recon(dset,options)
-% dset = recon(spath,exps) loads raw data from recognized 
+% dset = remmi.recon(dset,options) loads raw data from recognized 
 %   pre-clinical MRI data formats, and returns reconstructed images and
 %   parameters.
 %   
 % optional inputs:
-%   spath = string path to a study stored in a recognized vender format
-%   exps = list of experiments to reconstruct within spath 
-%   options.apodize_fn = function to apodize data
-%   options.matrix_sz = reconstruction size (by zero padding)
+%   dset.spath = string path to a study stored in a recognized vender format
+%   dset.exps = list of experiments to reconstruct within spath 
+%   options.apodize_fn = function to apodize data 
 %
 % output:
 %   dset = a structure (or array of structures) containing:

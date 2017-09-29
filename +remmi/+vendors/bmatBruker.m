@@ -3,7 +3,7 @@ function bm = bmatBruker(pp)
 
 dt = .004; % time resolution, ms
 gamma = 42.576; % MHz/T
-te = pp.te(1); % ms
+te = pp.te(1)*1000; % ms
 tm = 0; % ms
 gmax = pp.methpars.PVM_GradCalConst/gamma; % mT/m
 

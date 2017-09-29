@@ -1,32 +1,22 @@
 function t2set = analysis(dset,varargin)
-% t2set = remmi.mse.analysis(dset,metrics,fitting) performs multi-exponential T2 
-%   analysis on image data in a dataset.
+% t2set = remmi.mse.analysis(dset,metrics,fitting,mera_analysis,name) 
+% performs generalized relaxometry analysis with MERA on data in dset:
 %
-%   T2Analysis(dset):
-%       dset.img = image data
+%       dset.(name) = data to process
 %       dset.mask = mask for processing data
 %       dset.pars = basic remmi parameter set including te
 %       dset.labels = cell array of labels to dset.img dimensions
 %
-%   T2Analysis(dset,metrics)
-%   metrics is a optional structure of function handles that operate on 
-%   the output structure of MERA. The default metrics are the MWF, T2 and 
-%   B1:
-%       metrics.MWF  = @(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1);
-%       metrics.gmT2 = @(out) exp(sum(out.Fv.*log(out.Tv),1)./sum(out.Fv,1))
-%       metrics.B1   = @(out) out.theta;
+%       metrics = a optional structure of function handles that operate on 
+%       the output structure of MERA. 
 %
-%   T2Analysis(dset,metrics,fitting)
-%   fitting is passed directly to MERA for multi-exponential T2/EPG 
-%   analysis. By default:
-%       fitting.regtyp = 'mc';
-%       fitting.regadj='manual';
-%       fitting.regweight=0.0005; 
-%       fitting.B1fit = 'y';
-%       fitting.rangetheta=[135 180];
-%       fitting.numbertheta=10;
-%       fitting.numberT = 100;
-%       fitting.rangeT = [te(1)/2 .5];
+%       fitting & mera_analysis = passed directly to MERA for multi- 
+%       exponential T2/EPG analysis
+%
+%       name = name of field in dset to fit. Default is 'img'
+%
+%   If not provided, default values for metrics, fitting, mera_analysis,
+%   and name are taken from remmi.mse.mT2options
 % 
 %   Returns a dataset which contains parameter maps defined in the metrics
 %   structure
@@ -36,6 +26,14 @@ function t2set = analysis(dset,varargin)
 
 % by default, use epg options
 [metrics,fitting,manalysis,name] = remmi.mse.mT2options(varargin{:});
+
+if ~exist('dset','var')
+    dset = struct();
+end
+
+if ~isfield(dset,name) || isempty(dset.(name))
+    dset = remmi.util.thresholdmask(remmi.recon(dset));
+end
 
 sz = size(dset.(name)); 
 seg_sz = 256; % number of multi-echo measurements to process at one time
@@ -53,6 +51,13 @@ in.t = dset.pars.te; % sec
 % define a mask if one is not given
 if isfield(dset,'mask')
     mask = squeeze(dset.mask);
+    
+    % apply the mask across all non-echo dimensions
+    msz = sz(~echoDim);
+    if numel(msz)==1
+        msz(2) = 1;
+    end
+    mask = bsxfun(@times,mask,ones(msz));
 else
     mask = squeeze(true(prod(sz(~echoDim),1)));
 end
