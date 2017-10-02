@@ -155,13 +155,14 @@ classdef BrukerPV < handle
             pars.acqpars = acqpars;
         end
         
-        function [img,labels,pars] = load(obj,exp,options)
+        function [img,labels,pars] = load(obj,exp,opts)
             % load parameters
             pars = obj.loadPars(exp);
             
             % load images
             expPath = fullfile(obj.path,exp);
-            img = remmi.vendors.loadBruker(expPath,pars.methpars,options);
+            raw = remmi.vendors.loadBruker(expPath,pars.methpars);
+            img = remmi.recon.ft(raw,opts);
             
             sz = size(img);
             if size(img,length(obj.labels))==1

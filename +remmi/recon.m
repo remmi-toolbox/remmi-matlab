@@ -45,7 +45,7 @@ else
 end
 
 % set the default reconstruction options
-if nargin<3
+if nargin<2
     options = struct();
 end
 options = remmi.recon.options(options);

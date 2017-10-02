@@ -1,4 +1,4 @@
-function img = loadBruker(dataPath,methpars,options)
+function data = loadBruker(dataPath,methpars)
 % img = loadBruker(dataPath)
 % loads raw data from Bruker acquisitions & reconstructs images 
 %
@@ -183,17 +183,6 @@ catch
     % todo: implement PE offset correction for PV5
     warning('PE offsets are uncorrected');
 end
-
-% reconstruct images
-data = options.apodize_fn(data);
-data = fftshift(fftshift(fftshift(data,1),2),3);
-img = fft(fft(data,encmatrix(1),1),encmatrix(2),2);
-if encmatrix(3) > 1
-    img = fft(img,encmatrix(3),3);
-end
-img = fftshift(fftshift(fftshift(img,1),2),3);
-
-img = permute(img(:,end:-1:1,:,:,:,:,:,:,:),[2 1 3 4 5 6 7 8 9]);
 
 end
 
