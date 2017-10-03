@@ -56,11 +56,11 @@ if length(encmatrix) < 3
 end
 
 pe1table = methpars.PVM_EncSteps1;
-pe1table = pe1table+encmatrix(2)/2+1;
+pe1table = pe1table+floor(encmatrix(2)/2)+1;
 
 if encmatrix(3) > 1
     pe2table = methpars.PVM_EncSteps2;
-    pe2table = pe2table+encmatrix(3)/2+1;
+    pe2table = pe2table+floor(encmatrix(3)/2)+1;
 else
     pe2table = 1;
 end
