@@ -1,5 +1,5 @@
 function rois = draw(dset,nROIs,labels,strname)
-% rois = draw(dset,nROIs,labels,strname) prompts to draw ROIs on data in
+% rois = remmi.roi.draw(dset,nROIs,labels,strname) prompts to draw ROIs on data in
 % dset
 %
 %       dset.(strname) = data to process
@@ -21,6 +21,7 @@ function rois = draw(dset,nROIs,labels,strname)
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
+
 % default number of ROIs
 if ~exist('nROIs','var') || isempty(nROIs)
     nROIs = 1;
@@ -38,7 +39,7 @@ if ~exist('labels','var') || isempty(labels)
     labels = {'RO','PE1'};
 end
 
-% be default, ROIs are drawn from dset.img
+% by default, ROIs are drawn from dset.img
 if ~exist('name','var') || isempty(strname)
     strname = 'img';
 end
@@ -73,7 +74,7 @@ rois.(strname) = zeros(rois.imgsize);
 rois.labels = {'ROI',dset.labels{~roidim}};
 rois.mask = true(nROIs,1);
 
-hf = figure();
+hf = singlefig();
 for n=1:nROIs
     figure(hf)
     imagesc(abs(data(:,:,slidx{:})));
@@ -89,3 +90,15 @@ for n=1:nROIs
     
     rois.(strname)(n,:) = reshape(squeeze(sum(sum(bsxfun(@times,bw,data),1),2)),[],1);
 end
+
+function hf = singlefig()
+% allows ROIs to be drawn over the same figure on subsequent calls of
+% remmi.roi.draw
+
+persistent handle
+
+if isempty(handle) || ~ishandle(handle)
+	handle = figure();
+end
+
+hf = handle;
