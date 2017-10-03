@@ -54,7 +54,11 @@ classdef dataset < dynamicprops
                 fields = fieldnames(initdata);
                 
                 for n=1:length(fields)
-                    obj.(fields{n}) = initdata.(fields{n});
+                    if isprop(obj,fields{n})
+                        obj.(fields{n}) = initdata.(fields{n});
+                    else
+                        obj.add(fields{n},initdata.(fields{n}));
+                    end
                 end
             end
         end
