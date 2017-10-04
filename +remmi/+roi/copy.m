@@ -26,6 +26,7 @@ data = dest_set.(strname);
 % what dimensions?
 labels = dest_set.labels(~ismember(dest_set.labels,src_set.labels));
 roidim = ismember(dest_set.labels,labels);
+roidim = (roidim & cumsum(roidim)<=2); %only use the first two dimensions
 
 % rearrainge to make things easier
 sz =size(data); 
