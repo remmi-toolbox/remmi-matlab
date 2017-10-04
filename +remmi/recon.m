@@ -88,7 +88,7 @@ if length(exps)>1
             if isequal(dset.labels{:})
 
                 % Do all datasets have the same size?
-                sz = arrayfun(@(x) size(x),dset.img,'UniformOutput',false);
+                sz = cellfun(@(x) size(x),dset.img,'UniformOutput',false);
                 if isequal(sz{:})
                     combine_datasets = true;
                 end
@@ -110,7 +110,7 @@ if combine_datasets
     % combine them into a single dataset
 
     % concatenate the image data
-    catdim = max(length(sz{1})+1,4);
+    catdim = length(sz{1})+1;
     img = cat(catdim,dset.img{:});
     labels = [dset.labels{1} 'EXP'];
 
