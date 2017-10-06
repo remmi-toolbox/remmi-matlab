@@ -1,4 +1,4 @@
-function rois = copy(dest_set,src_set,strname)
+function rois = copy(dest_set,src_set)
 % rois = remmi.roi.copy(dest_set,src_set) copys ROIs from src_set to dset_set
 %
 %       dest_set.(strname) = data to process
@@ -7,8 +7,7 @@ function rois = copy(dest_set,src_set,strname)
 %
 %       src_set.x{:} & str_set.yi{:} contain polygon coordinates for
 %       previously drawn ROIs, like that in remmi.roi.draw()
-%
-%       strname = name of field in dset to fit. Default is 'img'
+%       src_set.roiopts contains options from previous roi drawing
 % 
 %   Returns a data set containing reduced image data from the ROIs
 %
@@ -16,17 +15,16 @@ function rois = copy(dest_set,src_set,strname)
 % for the REMMI Toolbox
 
 % by default, ROIs are drawn from dset.img
-if ~exist('name','var') || isempty(strname)
-    strname = 'img';
-end
+strname = src_set.roiopts.strname;
 
-nROIs = numel(src_set.xi);
+nROIs = src_set.roiopts.nROIs;
 data = dest_set.(strname);
 
 % what dimensions?
-labels = dest_set.labels(~ismember(dest_set.labels,src_set.labels));
-roidim = ismember(dest_set.labels,labels);
-roidim = (roidim & cumsum(roidim)<=2); %only use the first two dimensions
+roidim = ismember(dest_set.labels,src_set.roiopts.labels);
+if sum(roidim) ~= 2
+    error('ROIs must be drawn in exactly two dimensions. Please specify labels');
+end
 
 % rearrainge to make things easier
 sz =size(data); 
@@ -37,6 +35,9 @@ sz = [sz(roidim) sz(~roidim)];
 % set up the structure that will be returned
 rois = dest_set;
 rois.imgsize = [nROIs sz(~roidim)];
+if numel(rois.imgsize) == 1
+    rois.imgsize(2) = 1;
+end
 rois.(strname) = zeros(rois.imgsize);
 rois.labels = {'ROI',dest_set.labels{~roidim}};
 rois.mask = true(nROIs,1);

@@ -1,5 +1,5 @@
-function rois = draw(dset,nROIs,labels,strname)
-% rois = remmi.roi.draw(dset,nROIs,labels,strname) prompts to draw ROIs on data in
+function rois = draw(dset,options)
+% rois = remmi.roi.draw(dset,options) prompts to draw ROIs on data in
 % dset
 %
 %       dset.(strname) = data to process
@@ -10,12 +10,15 @@ function rois = draw(dset,nROIs,labels,strname)
 %       if dset or dset.(strname) is not given, default reconstruction and
 %       thresholding methods are called
 %
-%       nROIs = number of ROIs or a cell array of ROI names
+%       options.nROIs = number of ROIs or a cell array of ROI names
 %
-%       labels = label of dimensions (matching dset.(strname).labels) over
+%       options.labels = label of dimensions (matching dset.(strname).labels) over
 %       which to draw ROIs
 %
-%       strname = name of field in dset to fit. Default is 'img'
+%       options.strname = name of field in dset to fit. Default is 'img'
+%
+%       options.roifun = function handle on how to combine roi results. The
+%       function must take a vector and return a single value. Defualt = @sum
 % 
 %   Returns a data set containing reduced image data from the ROIs
 %
@@ -23,31 +26,13 @@ function rois = draw(dset,nROIs,labels,strname)
 % for the REMMI Toolbox
 
 % default number of ROIs
-if ~exist('nROIs','var') || isempty(nROIs)
-    nROIs = 1;
-end
 
-if iscell(nROIs)
-    ROIs = nROIs;
-    nROIs = numel(ROIs);
-else
-    ROIs = cellfun(@num2str,num2cell(1:nROIs),'UniformOutput',false);
-end
+options = setoptions(options);
 
-% by default, draw ROIs in the RO & PE1 directions
-if ~exist('labels','var') || isempty(labels)
-    labels = {'RO','PE1'};
-end
-
-% by default, ROIs are drawn from dset.img
-if ~exist('name','var') || isempty(strname)
-    strname = 'img';
-end
-
-data = dset.(strname);
+data = dset.(options.strname);
 
 % which dimensions are we drawing ROIs? 
-roidim = ismember(dset.labels,labels);
+roidim = ismember(dset.labels,options.labels);
 sz =size(data); 
 
 % check that we are drawing ROIs for exactly 2 dimensions
@@ -69,26 +54,33 @@ slidx = slidx(~roidim);
 
 % set up the structure that will be returned
 rois = dset;
-rois.imgsize = [nROIs sz(~roidim)];
-rois.(strname) = zeros(rois.imgsize);
+rois.imgsize = [options.nROIs sz(~roidim)];
+if numel(rois.imgsize) == 1
+    rois.imgsize(2) = 1;
+end
+rois.(options.strname) = zeros(rois.imgsize);
 rois.labels = {'ROI',dset.labels{~roidim}};
-rois.mask = true(nROIs,1);
+rois.mask = true(options.nROIs,1);
+rois.roiopts = options;
 
 hf = singlefig();
-for n=1:nROIs
+for n=1:options.nROIs
     figure(hf)
     imagesc(abs(data(:,:,slidx{:})));
     colormap('gray');
     axis('image','off');
     colorbar();
-    title(['Draw ROI: ' num2str(ROIs{n})]);
+    title(['Draw ROI: ' num2str(options.ROIs{n})]);
     
     [bw,xi,yi] = roipoly();
     
     rois.xi{n} = xi;
     rois.yi{n} = yi;
     
-    rois.(strname)(n,:) = reshape(squeeze(sum(sum(bsxfun(@times,bw,data),1),2)),[],1);
+    roidata = bsxfun(@times,bw,data);
+    rois.(options.strname)(n,:) = reshape(squeeze(options.roifun(roidata(:))),[],1);
+end
+
 end
 
 function hf = singlefig()
@@ -102,3 +94,38 @@ if isempty(handle) || ~ishandle(handle)
 end
 
 hf = handle;
+
+end
+
+function opts = setoptions(opts)
+
+if ~exist('opts','var') || ~isstruct(opts)
+    opts = struct();
+end
+
+if ~isfield(opts,'nROIs') || isempty(opts.nROIs)
+    opts.nROIs = 1;
+end
+
+if iscell(opts.nROIs)
+    opts.ROIs = opts.nROIs;
+    opts.nROIs = numel(opts.ROIs);
+else
+    opts.ROIs = cellfun(@num2str,num2cell(1:opts.nROIs),'UniformOutput',false);
+end
+
+% by default, draw ROIs in the RO & PE1 directions
+if ~isfield(opts,'labels') || isempty(opts.labels)
+    opts.labels = {'RO','PE1'};
+end
+
+% by default, ROIs are drawn from dset.img
+if ~isfield(opts,'strname') || isempty(opts.strname)
+    opts.strname = 'img';
+end
+
+if ~isfield(opts,'roifun') || isempty(opts.roifun)
+    opts.roifun = @sum;
+end 
+
+end
