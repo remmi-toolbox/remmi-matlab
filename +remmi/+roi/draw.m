@@ -25,8 +25,6 @@ function rois = draw(dset,options)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-% default number of ROIs
-
 options = setoptions(options);
 
 data = dset.(options.strname);

@@ -10,6 +10,12 @@ classdef dataset < dynamicprops
     % dset = remmi.dataset('test.mat');
     % dset.noise = randn(100);
     %
+    % A structure can also be passed to remmi.dataset to preload fields
+    % into the dataset. Example:
+    % info.spath = '/data/studyname/';
+    % info.exps = 10; 
+    % dset = remmi.dataset('test.mat',info);
+    %
     % Kevin Harkins & Mark Does, Vanderbilt University
     % for the REMMI Toolbox
     
