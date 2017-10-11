@@ -117,17 +117,22 @@ classdef BrukerPV < handle
             
             % TR
             pars.tr = methpars.PVM_RepetitionTime(:)/1000; % s
-            if isfield(methpars,'REMMI_MtIrTimeArr')
-                pars.ti = methpars.REMMI_MtIrTimeArr(:)/1000; % s
-            elseif isfield(methpars,'InversionTime')
-                pars.ti = methpars.InversionTime(:)/1000; % s
-            end
             
-            % TD, if exists
-            if isfield(methpars,'REMMI_MtTDTime')
-                pars.td = methpars.REMMI_MtTDTime(:)/1000; % s
-            elseif isfield(methpars,'RepetitionDelayTime')
-                pars.td = methpars.RepetitionDelayTime(:)/1000; % s
+            % Load parameters if this is an MTIR dataset
+            if isfield(methpars,'REMMI_MtIrOnOff') && ...
+                        strcmp(methpars.REMMI_MtIrOnOff,'Yes');
+                if isfield(methpars,'REMMI_MtIrTimeArr')
+                    pars.ti = methpars.REMMI_MtIrTimeArr(:)/1000; % s
+                elseif isfield(methpars,'InversionTime')
+                    pars.ti = methpars.InversionTime(:)/1000; % s
+                end
+
+                % TD, if exists
+                if isfield(methpars,'REMMI_MtTDTime')
+                    pars.td = methpars.REMMI_MtTDTime(:)/1000; % s
+                elseif isfield(methpars,'RepetitionDelayTime')
+                    pars.td = methpars.RepetitionDelayTime(:)/1000; % s
+                end
             end
             
             % for offset MT sequences, what is the range in frequence
