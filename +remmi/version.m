@@ -6,5 +6,5 @@ function ver = version()
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-ver = '0.1.1';
+ver = '0.1.2';
 end
