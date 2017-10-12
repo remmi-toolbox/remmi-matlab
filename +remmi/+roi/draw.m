@@ -1,4 +1,4 @@
-function rois = draw(dset,options)
+function rois = draw(dset,varargin)
 % rois = remmi.roi.draw(dset,options) prompts to draw ROIs on data in
 % dset
 %
@@ -18,14 +18,14 @@ function rois = draw(dset,options)
 %       options.strname = name of field in dset to fit. Default is 'img'
 %
 %       options.roifun = function handle on how to combine roi results. The
-%       function must take a vector and return a single value. Defualt = @sum
+%       function must take a vector and return a single value. Defualt = @mean
 % 
 %   Returns a data set containing reduced image data from the ROIs
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-options = setoptions(options);
+options = setoptions(varargin{:});
 
 data = dset.(options.strname);
 
@@ -75,8 +75,11 @@ for n=1:options.nROIs
     rois.xi{n} = xi;
     rois.yi{n} = yi;
     
-    roidata = bsxfun(@times,bw,data);
-    rois.(options.strname)(n,:) = reshape(squeeze(options.roifun(roidata(:))),[],1);
+    for m=1:prod(sz(~roidim))
+        d = data(:,:,m);
+        d = abs(d(bw));
+        rois.(options.strname)(n,m) = options.roifun(d);
+    end
 end
 
 end
@@ -123,7 +126,7 @@ if ~isfield(opts,'strname') || isempty(opts.strname)
 end
 
 if ~isfield(opts,'roifun') || isempty(opts.roifun)
-    opts.roifun = @sum;
+    opts.roifun = @mean;
 end 
 
 end

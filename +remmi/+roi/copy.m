@@ -16,6 +16,7 @@ function rois = copy(dest_set,src_set)
 
 % by default, ROIs are drawn from dset.img
 strname = src_set.roiopts.strname;
+roifun = src_set.roiopts.roifun;
 
 nROIs = src_set.roiopts.nROIs;
 data = dest_set.(strname);
@@ -48,5 +49,9 @@ rois.yi = src_set.yi;
 for n=1:nROIs
     bw = roipoly(dest_set.(strname),rois.xi{n},rois.yi{n});
     
-    rois.(strname)(n,:) = reshape(squeeze(sum(sum(bsxfun(@times,bw,data),1),2)),[],1);
+    for m=1:prod(sz(~roidim))
+        d = data(:,:,m);
+        d = abs(d(bw));
+        rois.(strname)(n,m) = roifun(d);
+    end
 end

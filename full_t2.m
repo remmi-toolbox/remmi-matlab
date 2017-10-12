@@ -23,7 +23,8 @@ metrics.S = @(out) out.S;
 dset.epg = remmi.mse.mT2(dset.images,metrics);
 
 % draw a few ROIS
-dset.ROIs = remmi.roi.draw(dset.images,3);
+opts.nROIs = 3;
+dset.ROIs = remmi.roi.draw(dset.images,opts);
 
 % Process ROI data
 dset.ROI_epg = remmi.mse.mT2(dset.ROIs,metrics);
