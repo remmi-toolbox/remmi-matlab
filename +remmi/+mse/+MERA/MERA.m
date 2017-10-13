@@ -1,7 +1,7 @@
 function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % function [output] = MERA(DATA,FITTING,ANALYSIS)
 %
-% MERA version 2.03
+% MERA version 2.04
 % fits data in structure DATA with a distribution of decaying exponential
 % functions, subject to a non-negative constraint and other options as
 % defined in the structure FITTING. Output includes analysis of
@@ -87,7 +87,7 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %           total used in analysis (2)
 %     If FITTING.twoD = 'y'
 %       ANAYLSIS.rangeA2: openn interval of 2nd dimension exponential time
-%       constants to include in analysis (([min(FITTING.rangeT2) 
+%       constants to include in analysis (([min(FITTING.rangeT2)
 %       max(FITTING.rangeT2)])
 %
 %   If ANALYSIS.extract = 'manual'
@@ -169,13 +169,13 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % sharing this code, consider that I am a big fan of single malt whisky!
 
 %% Version History
-% 
+%
 % Version 2.0, 15 Feb 2014
 %
 % Version 2.01, 26 Feb 2014
 %   corrects auto-extract error that may have cased a short time-constant
 %   component to be missed or inaccurately calculated
-%   
+%
 %   forces analysis.graph = 'y' if analysis.extract = 'manual'
 %
 % Version 2.02, 11 Mar 2014
@@ -197,14 +197,14 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %   Revised FEB 1995 to accompany reprinting of the book by SIAM.
 
 % Meher Juttukonda, developed the initial beta versions of MERA v1.0 from a
-%   collection of old code of mine, je developed the first verion of the MERA 
+%   collection of old code of mine, je developed the first verion of the MERA
 %   GUI in MERA v1.0, he wrote the v1.0 Documentation.docx file, and wrote
 %   the html and php files for the first MERA website. Although little of
 %   the code of other materials Meher wrote still exist in MERA v2.0, I
 %   would still be working from dozens of loosely related bits of code if
 %   it weren't for his efforts in getting MERA off the ground.
 
-% Kathryn L. West has helped test and debug numerous developmental 
+% Kathryn L. West has helped test and debug numerous developmental
 %   versions of MERA 2.0
 
 % Thomas Prasloski, shared code for B1 correction at the Iceland ISMRM
@@ -395,6 +395,7 @@ end
 function [output,fitting,analysis] = fittingloop(data,fitting,analysis)
 
 %% create interactive window or waitbar
+
 if strcmpi(analysis.interactive,'y')
   cla(analysis.htdomain);
   axes(analysis.hTdomain)
@@ -404,7 +405,6 @@ if strcmpi(analysis.interactive,'y')
 else
   fprintf('%3.0f %% done...',0);
 end
-
 %% Extract data and normalize data
 
 if strcmpi(fitting.twoD,'y')
@@ -486,7 +486,7 @@ if strcmpi(fitting.regtyp,'mg')
   sig = range(u)/100*fitting.widthgauss/2;
   lb_fitmG = exp(u(1)+5*sig)*ones(ng,1);
   ub_fitmG = exp(u(end)-5*sig)*ones(ng,1);
-    
+  
   if strcmpi(fitting.twoD,'y')
     u2 = log(fitting.T2);
     sig2 = range(u2)/100*fitting.widthgauss/2;
@@ -510,7 +510,7 @@ if strcmpi(fitting.regtyp,'mg')
   ErT0 = zeros(1,fitting.numberT0);
   fopmg = optimset(@fmincon);
   fopmg = optimset(fopmg,'TolX',1e-8,'TolFun',1e-8,'Display','off',...
-    'Algorithm','active-set');  
+    'Algorithm','active-set');
 end
 
 % optimization for SpectrumCalc
@@ -527,9 +527,14 @@ for i = 1:fitting.numbertrains
     Dx = Dn(:,i);
   end
   
+%   % update waitbar
+%   if strcmpi(analysis.interactive,'n')
+%     waitbar(i/fitting.numbertrains,w,'Calculating ...');
+%   end
   % update waitbar
   if strcmpi(analysis.interactive,'n')
-    fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',i/fitting.numbertrains*100);
+    fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',...
+      i/fitting.numbertrains*100);
   end
   
   % initialize fit errors to zero for all possible theta
@@ -538,6 +543,13 @@ for i = 1:fitting.numbertrains
   
   % spectral fitting at different refocussing flip angles
   for kb = 1:fitting.numbertheta
+    % MDD 2.04 update, fit B1 without regularization for speed
+    if strcmpi(fitting.B1fit,'y')&& kb==1
+      Htemp = fitting.H;
+      regAtemp = fitting.regtyp;
+      fitting.H = [];
+      fitting.regtyp = 'none';
+    end
     
     Amat = Amat_all{kb};
     Dr = Amat.Ur'*Dx*Amat.Ur2;
@@ -549,7 +561,7 @@ for i = 1:fitting.numbertrains
         [TvT0(:,:,k0),ErT0(k0)] = fmincon(@fitmG,T0,[],[],[],[], ...
           lb_fitmG,ub_fitmG,[],fopmg);
       end
-      [~,i0] = min(ErT0); Tv(:,:,i) = TvT0(:,:,i0); 
+      [~,i0] = min(ErT0); Tv(:,:,i) = TvT0(:,:,i0);
       T0min = fitting.T0gauss(:,:,i0);
       [Erb(kb),R(:,i),S(:,i),P(:,i),Av(:,i),Fv(:,i),offset(i)] =  ...
         fitmG(Tv(:,:,i));
@@ -562,6 +574,9 @@ for i = 1:fitting.numbertrains
   end
   
   if strcmpi(fitting.B1fit,'y')
+    % MDD 2.04 update, reset regularizer
+    fitting.H = Htemp;
+    fitting.regtyp = regAtemp;
     ErInterp=interp1(fitting.theta_vector,Erb, ...
       fitting.theta_vector_fine,'spline');
     [~,imn] = min(ErInterp);
@@ -580,6 +595,7 @@ for i = 1:fitting.numbertrains
     else
       [S(:,i),R(:,i),P(:,i),muxm(i),Er(i),Er0(i),offset(i)] = ...
         SpectrumCalc(Dx,Dr,Amat,fitting,fopsILT);
+
     end
     
   else
@@ -610,6 +626,9 @@ SNR= sum(S)./std(R);
 if strcmpi(analysis.interactive,'n')
   fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
 end
+% if strcmpi(analysis.interactive,'n')
+%   close(w)
+% end
 
 % reshape 2D fitting into matrices
 if strcmpi(fitting.twoD,'y')
@@ -638,9 +657,9 @@ end
 %% sub functions
 
   function [Amat] = buildA(theta_vector)
-    % For 1D problems, build Amatrix and associated objects for every theta
-    % value in advance
-    % 2D problems are not compatible with B1fitting, so theta_vector = 180
+   % For 1D problems, build Amatrix and associated objects for every theta
+   % value in advance
+   % 2D problems are not compatible with B1fitting, so theta_vector = 180
     
     numbertheta = length(theta_vector);
     Amat = cell(numbertheta,1);
@@ -902,7 +921,7 @@ if strcmpi(analysis.extract,'auto')
       (Tv(:,2) <= analysis.rangeA2(2));
     indKe = indKe(:,1)&indKe(:,2);
   else
-      indKe = (Tv >= analysis.rangeA(1)) & (Tv <= analysis.rangeA(2));
+    indKe = (Tv >= analysis.rangeA(1)) & (Tv <= analysis.rangeA(2));
   end
   
   Av = bsxfun(@times,Av,indKe);
@@ -945,7 +964,7 @@ end
       htfig = gcf;
     end
     figure(htfig), axes(htax)
-
+    
     if strcmpi(fitting.twoD,'y')
       [t2m,tm] = meshgrid(data.t2,data.t);
       plot3(t2m,tm,data.D,'LineStyle','-'); grid on;
@@ -1001,13 +1020,13 @@ end
     end
     title('T-domain Spectrum','FontSize',FS+4,'FontWeight','Bold')
     
-    set([htax,hTax],'FontSize',FS,'XGrid','on','YGrid','on','ZGrid','on');    
+    set([htax,hTax],'FontSize',FS,'XGrid','on','YGrid','on','ZGrid','on');
   end
 
   function plotlabel
     % add labels to components on T-domain plot
     figure(hTfig), axes(hTax)
-
+    
     if strcmpi(fitting.twoD,'y')
       for k = 1:Nc
         Ta_ms = 1e3*Tv(k,1); Tb_ms = 1e3*Tv(k,2);
@@ -1105,7 +1124,7 @@ end
         n = find(([dy' 0]<0) & ([0 dy']>=0));
         nx{kt} = n;
       end
-
+      
       Nc = max(cellfun('length',nx))+1; % max number of components found
       
     else
@@ -1158,7 +1177,7 @@ end
       end
     end
     
-    Fv = bsxfun(@rdivide,Av,sum(Av,1));    
+    Fv = bsxfun(@rdivide,Av,sum(Av,1));
     
   end
 
@@ -1181,7 +1200,7 @@ end
         Av(kc) = sum(fc);
       end
       Fv=Av/sum(Av);
-            
+      
     else
       Nc = analysis.numberextract;
       txt = ['identify ', int2str(Nc), ' components by drawing ', ...
@@ -1605,7 +1624,7 @@ if analysisflags(1)
 else
   graph = 'n';
 end
-  
+
 
 if analysisflags(2)
   rangeA = real(analysis.rangeA);
@@ -1703,7 +1722,7 @@ end
 if strcmpi(twoD,'y')
   [numberechoes,numberechoes2] = size(D);
   numbertrains = 1; % 2D fitting only for 1 data set at a time, for now
-else 
+else
   [numberechoes,numbertrains] = size(D);
   numberechoes2 = 1;
   if strcmpi(interactive,'y') && numbertrains > 1
@@ -2469,7 +2488,7 @@ return
   end
 
   function exit_callback(~,~)
-    display Goodbye
+    disp('Goodbye')
     uiresume(f);
   end
 
