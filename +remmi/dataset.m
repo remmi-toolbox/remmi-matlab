@@ -82,14 +82,23 @@ classdef dataset < dynamicprops
             if isprop(obj,a(1).subs)
                 obj = builtin('subsasgn',obj,a,val);
             else
+                % we need to create this property. 
+                % first recreate val if a is further subreferenced
                 if numel(a) > 1
-                    error(['The field ' a(1).subs ' should be created before it can be sub referenced']);
+                    if strcmp(a(2).type, '.')
+                        str = struct();
+                    elseif strcmp(a(2).type,'()')
+                        str = [];
+                    elseif strcmp(a(2).type,'{}')
+                        str = {};
+                    end
+                    val = subsasgn(str,a(2:end),val);
                 end
                 
-                % create the field
-                p = obj.addprop(a.subs);
-                p.SetMethod = remmi.dataset.createSetMethod(a.subs);
-                obj.(a.subs) = val;
+                % create and assign the property
+                p = obj.addprop(a(1).subs);
+                p.SetMethod = remmi.dataset.createSetMethod(a(1).subs);
+                obj.(a(1).subs) = val;
             end
         end
     end
