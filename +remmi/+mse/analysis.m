@@ -72,6 +72,13 @@ data = permute(dset.(name),[idx(echoDim) idx(~echoDim)]);
 % linear index to all the vectors to process
 mask_idx = find(mask);
 
+% take the absolute value of complex data
+makereal = str2func('@(x) abs(x)');
+if isreal(data)
+    % if the data is already real, allow negative values to remain negative
+    makereal = str2func('@(x) x');
+end
+
 % split the calls to MERA into segments of size seg_sz
 nseg = ceil(numel(mask_idx)/seg_sz);
 metlen = zeros(size(names));
@@ -81,7 +88,7 @@ for seg=1:nseg
     % segment the mask
     segmask = (seg_sz*(seg-1)+1):min(seg_sz*seg,numel(mask_idx));
     
-    in.D = abs(data(:,mask_idx(segmask)));
+    in.D = makereal(data(:,mask_idx(segmask)));
 
     % process the data in MERA
     [out,fout] = remmi.mse.MERA.MERA(in,fitting,manalysis);
