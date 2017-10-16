@@ -85,6 +85,11 @@ classdef dataset < dynamicprops
                 % we need to create this property. 
                 % first recreate val if a is further subreferenced
                 if numel(a) > 1
+                    if ~strcmp(a(1).type,'.')
+                        error('the class remmi.dataset cannot be subreferenced')
+                    end
+                    
+                    
                     if strcmp(a(2).type, '.')
                         str = struct();
                     elseif strcmp(a(2).type,'()')
@@ -96,9 +101,7 @@ classdef dataset < dynamicprops
                 end
                 
                 % create and assign the property
-                p = obj.addprop(a(1).subs);
-                p.SetMethod = remmi.dataset.createSetMethod(a(1).subs);
-                obj.(a(1).subs) = val;
+                obj.add(a(1).subs,val);
             end
         end
     end
