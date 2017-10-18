@@ -8,7 +8,7 @@ function img = ft(data,options)
 
 encmatrix = size(data);
 
-if numel(encmatrix) > 3
+if numel(encmatrix) < 3
     encmatrix(3) = 1;
 end
 
