@@ -37,6 +37,11 @@ function dat = pad(dat,sz)
 
 for n=1:length(sz)
     dsz = size(dat);
+    
+    if numel(dsz) < numel(sz)
+        dsz(numel(sz)) = 1;
+    end
+    
     if dsz(n) < sz(n)
         % add zeros onto both sides
         dim = dsz;
