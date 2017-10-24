@@ -6,8 +6,8 @@ function [metrics,fitting,analysis,name] = mT2options(metrics,fitting,analysis,n
 if ~exist('metrics','var') || isempty(metrics)
     % using str2func to suppress warnings when anonymous functions are
     % saved & re-loaded
-    metrics.MWF  = str2func('@(out) sum(out.Fv.*(out.Tv>0.003 & out.Tv<.017),1)./sum(out.Fv,1)');
-    metrics.gmT2 = @(out) calcGeometricMean(out);
+    metrics.MWF  = str2func('@(out)remmi.mse.calcT2frac(out,0.003,0.017)');
+    metrics.gmT2 = @remmi.mse.calcGeometricMean;
     metrics.B1   = str2func('@(out) out.theta');
 end
 
@@ -30,14 +30,5 @@ end
 if ~exist('name','var') || isempty(name)
     name = 'img';
 end
-
-end
-
-function gmT2 = calcGeometricMean(out)
-
-lTv = log(out.Tv);
-lTv(isinf(lTv)) = 0;
-
-gmT2 = exp(sum(out.Fv.*lTv,1)./sum(out.Fv,1));
 
 end
