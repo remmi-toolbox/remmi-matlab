@@ -1,10 +1,12 @@
 function out = slice(in,dim,i,name)
-% out = slice(in,dim,i) dyanmic slicing of input matrix  
+% out = slice(in,dim,i,name) dyanmic slicing of input matrix  
 %
-%   slice(in,dim,i)
+%   slice(in,dim,i,name)
 %       in = input matrix, or structure
-%       dim = dimension to be sliced
-%       i = range in dim to be included in the output
+%       dim = index or name of thedimension to be sliced
+%       i = scalar in dim to be included in the output
+%       name = if 'in' is a structure, this is the character string of the
+%       field to be sliced. by defalt, name = 'img'
 %       
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
