@@ -14,6 +14,6 @@ function frac = calcT2frac(out,lb,ub)
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
-frac = sum(out.Fv.*(out.Tv>lb&out.Tv<ub),1)./sum(out.Fv,1)';
+frac = sum(out.Fv.*(out.Tv>lb&out.Tv<ub),1)./sum(out.Fv,1);
 
 end
