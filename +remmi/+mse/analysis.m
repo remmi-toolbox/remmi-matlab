@@ -36,7 +36,7 @@ if ~isfield(dset,name) || isempty(dset.(name))
 end
 
 sz = size(dset.(name)); 
-seg_sz = 256; % number of multi-echo measurements to process at one time
+seg_sz = 20000; % number of multi-echo measurements to process at one time
 
 % what dimension is multiple echoes?
 echoDim = ismember(dset.labels,'NE');
@@ -97,7 +97,7 @@ for seg=1:nseg
     for m=1:length(names)
         % calculate the metric
         met = metrics.(names{m})(out);
-        metlen(m) = size(met,1);  % save the size for later
+        metlen(m) = max(size(met,1),metlen(m));  % save the size for later
         
         % store the maps for later
         maps(m,mask_idx(segmask)) = num2cell(met,1);
@@ -107,12 +107,30 @@ end
 % set the maps into the dataset, keeping proper dimensions
 t2set = struct();
 for m=1:length(names)
-    % index to non-empty cells
-    ix=cellfun(@isempty, maps(m,:));
     
-    % create matrix to hold the metric
-    val = zeros([metlen(m) sz(~echoDim)]);
-    val(:,~ix) = cell2mat(maps(m,:));
+    len = unique(cellfun(@length,maps(m,:)));
+    
+    if numel(len) > 2 
+        % the vectors in maps vary in length. The import is a bit involved
+        maxlen = max(len);
+        for n = 1:numel(maps(m,:))
+            if length(maps{m,n}) ~= maxlen
+                maps{m,n}(maxlen,1) = 0;
+            end
+        end
+        
+        val = cell2mat(maps(m,:));
+        val = reshape(val,[metlen(m) sz(~echoDim)]);
+    else
+        % all the vectors in maps are the same length. Simple import
+        
+        % index to empty cells
+        ix=cellfun(@isempty, maps(m,:));
+
+        % create matrix to hold the metric
+        val = zeros([metlen(m) sz(~echoDim)]);
+        val(:,~ix) = cell2mat(maps(m,:));
+    end
     
     nd = ndims(val);
     
