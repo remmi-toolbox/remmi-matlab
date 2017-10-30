@@ -42,6 +42,11 @@ classdef dataset < dynamicprops
                 error('"fname" must be a character string');
             end
             
+            [p,n,ext] = fileparts(obj.filename);
+            if isempty(p)
+                obj.filename = fullfile(pwd,[n ext]);
+            end
+            
             % does this file exist? If so, pre-load it
             if exist(obj.filename,'file')
                 % load the current properties
