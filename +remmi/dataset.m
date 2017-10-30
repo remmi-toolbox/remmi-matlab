@@ -89,7 +89,6 @@ classdef dataset < dynamicprops
                         error('the class remmi.dataset cannot be subreferenced')
                     end
                     
-                    
                     if strcmp(a(2).type, '.')
                         str = struct();
                     elseif strcmp(a(2).type,'()')
@@ -104,7 +103,20 @@ classdef dataset < dynamicprops
                 obj.add(a(1).subs,val);
             end
         end
+        
+        function a = saveobj(obj)
+            % be smart about saving a remmi.dataset to file...
+            a.filename = obj.filename;
+        end
     end
+    
+    methods (Static)
+        function obj = loadobj(a)
+            % be smart about loading a remmi.dataset from file...
+            obj = remmi.dataset(a.filename);
+        end
+    end
+    
     methods (Static, Access = private)
         function method = createSetMethod(name)
             method = @setmethod;
@@ -116,8 +128,30 @@ classdef dataset < dynamicprops
                 if exist(obj.filename,'file')
                     save(obj.filename,'-struct','tmp','-append')
                 else
-                    save(obj.filename,'-struct','tmp')
+                    ver = strsplit(version(),{'.' ' '});
+                    ver = str2double([ver{1} '.' ver{2}]);
+                    if ver < 7.3 % earlier than R2006a
+                        save(obj.filename,'-struct','tmp')
+                    else % R2006a or later
+                        save(obj.filename,'-struct','tmp');%,'-v7.3')
+                    end
                 end
+                
+                [~,id] = lastwarn();
+                lastwarn(''); % clear other warnings
+                if strcmp(id,'MATLAB:save:sizeTooBigForMATFile')
+                    warning(['The property ''' name ''' was not saved to file: ' obj.filename]);
+                    [p,n,ext] = fileparts(obj.filename);
+                    fn = fullfile(p,[n '.' name ext]);
+                    save(fn,'-struct','tmp','-v7.3')
+                    [~,id] = lastwarn;
+                    if isempty(id)
+                        disp(['No data has been lost: ''' name ''' was instead saved to ' fn])
+                    else
+                        warning(['Something is wrong: ''' name ''' could not be saved.'])
+                    end
+                end
+                
             end
         end
     end
