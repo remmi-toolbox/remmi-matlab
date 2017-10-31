@@ -51,7 +51,11 @@ end
 options = remmi.recon.options(options);
 
 if ~iscell(exps)
-    exps = num2cell(exps);
+    if ischar(exps)
+        exps = {exps};
+    else
+        exps = num2cell(exps);
+    end
 end
 
 dset.exps = exps;
