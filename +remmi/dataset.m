@@ -133,7 +133,7 @@ classdef dataset < dynamicprops
                 if exist(obj.filename,'file')
                     save(obj.filename,'-struct','tmp','-append')
                 else
-                    ver = strsplit(version(),{'.' ' '});
+                    ver = remmi.util.strsplit(version(),{'.' ' '});
                     ver = str2double([ver{1} '.' ver{2}]);
                     if ver < 7.3 % earlier than R2006a
                         save(obj.filename,'-struct','tmp')
