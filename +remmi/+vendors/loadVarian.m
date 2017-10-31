@@ -1,4 +1,25 @@
-function [RE,IM,NP,NB,NT,HDR] = loadVarian(name,blocks,traces)
+function data = loadVarian(dataPath,pars)
+% data = remmi.vendors.loadVarian(dataPath)
+% loads raw data from Varian acquisitions
+%
+% Kevin Harkins & Mark Does, Vanderbilt University
+% for the REMMI Toolbox
+
+if ~exist('pars','var')
+    % load a few parameters
+    parpath = fullfile(dataPath,'procpar');
+    pars = remmi.vendors.parsVarian(parpath);
+end
+
+[re,im] = load_fid(fullfile(dataPath,'fid'));
+
+raw = re + 1i*im;
+
+data = raw;
+
+end
+
+function [RE,IM,NP,NB,NT,HDR] = load_fid(name,blocks,traces)
 %----------------------------------------
 %function load_fid
 %Reads a Vnmr fid file
@@ -34,7 +55,7 @@ else
 end
     
 
-fullname = sprintf('%s.fid%cfid',name,slash); 
+fullname = name;%sprintf('%s.fid%cfid',name,slash); 
  
 fid = fopen(fullname,'r','ieee-be');
 if fid == -1
@@ -148,3 +169,5 @@ if nargout > 5
     HDR = [HDR, scale, bstatus, index, mode, ctcount, lpval, rpval, lvl, tlt];
 end
 fclose(fid);
+
+end
