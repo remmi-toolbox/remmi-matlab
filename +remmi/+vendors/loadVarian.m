@@ -15,7 +15,13 @@ end
 
 raw = re + 1i*im;
 
-data = raw;
+nro = pars.np/2; % # of readout points
+nv = pars.nv; % # of views
+nv2 = max(pars.nv2,1); % # of 3d views
+nte = numel(pars.TE); % number of echoes
+
+data = reshape(raw,nro,nte,nv,nv2,[]);
+data = permute(data,[1 3 4 2]);
 
 end
 
