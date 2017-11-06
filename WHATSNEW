@@ -1,0 +1,20 @@
+What's new in: 
+
+REMMI-matlab version 0.1.5
+* Better error handling when Bruker reference scans are not included
+* Very preliminary methods to read/proces Varian data
+* This WHATSNEW file
+
+REMMI-matlab version 0.1.4
+* Updated to MERA v2.04
+* Work around for errors/warnings in remmi.dataset
+* remmi.mse.analysis only takes the absolute value if the input data is 
+    complex. Real data is left alone.
+* Bug fix when reconstrucing only a 2D image
+* Added function to specify MWF bounds in easy_T2
+* More examples and improvements to function help
+* Fixed a bug in remmi.mse.analysis that would error when MERA returns  
+    vectors that vary in length
+* By default, images are reconstructed without apodization
+* Added Contents.m to +remmi
+* Other various bug fixes
