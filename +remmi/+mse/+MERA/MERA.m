@@ -518,6 +518,7 @@ fopsILT = optimset(@fminbnd);
 fopsILT = optimset(fopsILT,'TolX',1e-8,'Display','off');
 
 %% loop through every vector of decay data
+Ntdisp = round(fitting.numbertrains/10);
 
 for i = 1:fitting.numbertrains
   % extract a column vector of data
@@ -532,7 +533,7 @@ for i = 1:fitting.numbertrains
 %     waitbar(i/fitting.numbertrains,w,'Calculating ...');
 %   end
   % update waitbar
-  if strcmpi(analysis.interactive,'n')
+  if strcmpi(analysis.interactive,'n')&& mod(i,Ntdisp)==0
     fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',...
       i/fitting.numbertrains*100);
   end
@@ -1519,7 +1520,9 @@ if fittingflags(13)
 else
   nnlscode = 'nnlsmex';
 end
-if strcmpi(nnlscode,'nnlsmex') && ~(exist(['nnlsMEX.',mexext],'file')==3)
+if strcmpi(nnlscode,'nnlsmex') && ...
+        ~(exist(['+remmi/+mse/+MERA/nnlsMEX.',mexext],'file')==3)
+%         ~(exist(['nnlsMEX.',mexext],'file')==3)
   nnlscode = 'lsqnonneg';
 end
 
@@ -1805,7 +1808,7 @@ switch nnlscode
     % Call MEX function
     At = A + 0;
     bt = b + 0;
-    x = nnlsMEX(At,m,m,n,bt,rnorm,W,ZZ,IDX,mode);
+    x = remmi.mse.MERA.nnlsMEX(At,m,m,n,bt,rnorm,W,ZZ,IDX,mode);
     
   case 'lsqnonneg'
     x = lsqnonneg(A,b);
