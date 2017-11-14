@@ -4,6 +4,7 @@ REMMI-matlab version 0.1.5
 * Better error handling when Bruker reference scans are not included
 * Very preliminary methods to read/proces Varian data
 * This WHATSNEW file
+* The README.md & README.html files
 
 REMMI-matlab version 0.1.4
 * Updated to MERA v2.04
