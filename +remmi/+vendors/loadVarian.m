@@ -15,13 +15,37 @@ end
 
 raw = re + 1i*im;
 
-nro = pars.np/2; % # of readout points
-nv = pars.nv; % # of views
-nv2 = max(pars.nv2,1); % # of 3d views
-nte = numel(pars.TE); % number of echoes
+if isfield(pars,'TE')
+    te = pars.TE;
+elseif isfield(pars,'te')
+    te = pars.te;
+else
+    te = 0;
+end
 
-data = reshape(raw,nro,nte,nv,nv2,[]);
-data = permute(data,[1 3 4 2]);
+if isfield(pars,'ti')
+    ti = pars.ti;
+else
+    ti = 0;
+end
+
+if pars.seqcon(4) == 's'
+    dims = [pars.np/2,numel(te),pars.nv,numel(ti),max(pars.nv2,1),1,1];
+    data = reshape(raw,dims);
+    data = permute(data,[1 3 5 2 6 7 4]);
+else
+    dims = [pars.np/2,numel(te),pars.nv,max(pars.nv2,1),1,1,numel(ti)];
+    data = reshape(raw,dims);
+    data = permute(data,[1 3 4 2 5 6 7]);
+end
+
+if isfield(pars,'pelist');
+    pe1 = pars.pelist + pars.nv/2;
+else
+    pe1 = 1:pars.nv;
+end
+
+data(:,pe1,:) = data(:,:,:);
 
 end
 

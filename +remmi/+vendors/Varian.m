@@ -109,6 +109,13 @@ classdef Varian < handle
             % TR
             pars.tr = procpar.tr(:); % s
             
+            if isfield(procpar,'ti')
+                pars.ti = procpar.ti;
+            end
+            if isfield(procpar,'td')
+                pars.td = procpar.td;
+            end
+            
 %             % Load parameters if this is an MTIR dataset
 %             if isfield(procpar,'REMMI_MtIrOnOff') && ...
 %                         strcmp(procpar.REMMI_MtIrOnOff,'Yes');
