@@ -118,6 +118,9 @@ classdef BrukerPV < handle
             % TR
             pars.tr = methpars.PVM_RepetitionTime(:)/1000; % s
             
+            % FOV
+            pars.fov = methpars.PVM_Fov; % mm
+            
             % Load parameters if this is an MTIR dataset
             if isfield(methpars,'REMMI_MtIrOnOff') && ...
                         strcmp(methpars.REMMI_MtIrOnOff,'Yes');

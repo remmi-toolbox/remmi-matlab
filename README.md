@@ -245,7 +245,7 @@ loading of data and parameter files
 
 * `remmi.vendors.BrukerPV` is a class for loading Bruker PV5 & PV6 data and 
 parameter files
-* `remmi.vendors.Varian` is a class for loading Varian/Agilent data and 
+* `remmi.vendors.Agilent` is a class for loading Varian/Agilent data and 
 parameter files
 
 ## Helper functions
@@ -255,9 +255,9 @@ path matches that of a supported vendor
 * `remmi.vendors.bmatBruker` is a function to calculate a b-matrix from the 
 remmiRARE sequence
 * `remmi.vendors.loadBruker` is a function to load Bruker data
-* `remmi.vendors.loadVarian` is a function to load Varian data
+* `remmi.vendors.loadAgilent` is a function to load Agilent data
 * `remmi.vendors.parsBruker` is a function to load Bruker parameter files
-* `remmi.vendors.parsVarian` is a function to load Varian parameter files
+* `remmi.vendors.parsAgilent` is a function to load Agilent parameter files
 
 
 # Known Bugs

@@ -1,6 +1,6 @@
-function data = loadVarian(dataPath,pars)
-% data = remmi.vendors.loadVarian(dataPath)
-% loads raw data from Varian acquisitions
+function data = loadAgilent(dataPath,pars)
+% data = remmi.vendors.loadAgilent(dataPath)
+% loads raw data from Agilent acquisitions
 %
 % Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
@@ -8,7 +8,7 @@ function data = loadVarian(dataPath,pars)
 if ~exist('pars','var')
     % load a few parameters
     parpath = fullfile(dataPath,'procpar');
-    pars = remmi.vendors.parsVarian(parpath);
+    pars = remmi.vendors.parsAgilent(parpath);
 end
 
 [re,im] = load_fid(fullfile(dataPath,'fid'));

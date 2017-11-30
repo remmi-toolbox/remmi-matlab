@@ -36,9 +36,9 @@
 %   remmi.vendors.bmatBruker - calculates the b-matrix for remmiRARE
 %       sequence
 %
-%   remmi.vendors.Varian - WIP class for loading Varian data
-%   remmi.vendors.loadVarian - WIP. loads and orders Varian raw data
-%   remmi.vendors.parsVarian - Loads a Varian parameter file
+%   remmi.vendors.Agilent - WIP class for loading Agilent data
+%   remmi.vendors.loadAgilent - WIP. loads and orders Agilent raw data
+%   remmi.vendors.parsAgilent - Loads a Agilent parameter file
 %
 %
 % HELPER FUNCTIONS:

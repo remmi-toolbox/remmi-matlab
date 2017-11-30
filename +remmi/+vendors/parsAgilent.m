@@ -1,5 +1,5 @@
-function procpar = parsVarian(pathname)
-%parsePP: Returns the contents of a Varian procpar file in a structure
+function procpar = parsAgilent(pathname)
+%parsePP: Returns the contents of a Agilent procpar file in a structure
 %
 %Usage: procpar = parsePP(experimentName);
 %         

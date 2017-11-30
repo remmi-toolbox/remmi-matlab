@@ -1,5 +1,5 @@
-classdef Varian < handle
-    % Varian is a class used to identify and reconstruct Varian
+classdef Agilent < handle
+    % Agilent is a class used to identify and reconstruct Agilent
     % VNMRJ datasets and images. 
     properties
         path
@@ -22,7 +22,7 @@ classdef Varian < handle
     end
     
     methods
-        function obj = Varian(spath)
+        function obj = Agilent(spath)
             % initiates a study
             
             % ask for a directory if one isn't given
@@ -95,7 +95,7 @@ classdef Varian < handle
             
             % load parameter files
             procpath = fullfile(expPath,'procpar');
-            procpar = remmi.vendors.parsVarian(procpath);
+            procpar = remmi.vendors.parsAgilent(procpath);
             
             % set the basic remmi experimental parameters
             % echo time
@@ -109,8 +109,12 @@ classdef Varian < handle
             % TR
             pars.tr = procpar.tr(:); % s
             
-            % FOV & resolution
-            pars.fov = [procpar.lro procpar.lpe procpar.lpe2]'*10; % mm
+            % FOV
+            if procpar.nD == 3
+                pars.fov = [procpar.lro procpar.lpe procpar.lpe2]'*10; % mm
+            else
+                pars.fov = [procpar.lro*10 procpar.lpe*10 procpar.sl]'; % mm
+            end
             
             if isfield(procpar,'ti')
                 pars.ti = procpar.ti;
@@ -137,13 +141,13 @@ classdef Varian < handle
 %             end
             
             % vendor and sequence
-            pars.vendor = 'Varian';
+            pars.vendor = 'Agilent';
             pars.sequence = procpar.seqfil;
 
             % time the data was acquired
             val = procpar.time_complete;
             if ~strcmp(val,'na')
-                val = remmi.vendors.Varian.parsetime(val);
+                val = remmi.vendors.Agilent.parsetime(val);
             end
             pars.time = val;
             pars.timestr = datestr(val);
@@ -158,7 +162,7 @@ classdef Varian < handle
             
             % load images
             expPath = fullfile(obj.path,exp);
-            raw = remmi.vendors.loadVarian(expPath,pars.procpar);
+            raw = remmi.vendors.loadAgilent(expPath,pars.procpar);
             img = remmi.recon.ft(raw,opts);
             
             sz = size(img);
