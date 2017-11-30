@@ -32,6 +32,7 @@ data = dset.(options.strname);
 % which dimensions are we drawing ROIs? 
 roidim = ismember(dset.labels,options.labels);
 sz =size(data); 
+roidim = roidim(sz>1);
 
 % check that we are drawing ROIs for exactly 2 dimensions
 if sum( roidim & (sz>1) ) ~=2

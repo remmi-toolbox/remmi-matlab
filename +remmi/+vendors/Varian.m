@@ -109,6 +109,9 @@ classdef Varian < handle
             % TR
             pars.tr = procpar.tr(:); % s
             
+            % FOV & resolution
+            pars.fov = [procpar.lro procpar.lpe procpar.lpe2]'*10; % mm
+            
             if isfield(procpar,'ti')
                 pars.ti = procpar.ti;
             end

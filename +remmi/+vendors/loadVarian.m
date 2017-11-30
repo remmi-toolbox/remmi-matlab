@@ -29,14 +29,27 @@ else
     ti = 0;
 end
 
+nv2 = max(pars.nv2,1);
 if pars.seqcon(4) == 's'
-    dims = [pars.np/2,numel(te),pars.nv,numel(ti),max(pars.nv2,1),1,1];
-    data = reshape(raw,dims);
-    data = permute(data,[1 3 5 2 6 7 4]);
+    if pars.seqcon(3) == 's'
+        dims = [pars.np/2,numel(te),numel(pars.tr),pars.nv,numel(ti),nv2,1,1,1];
+        data = reshape(raw,dims);
+        data = permute(data,[1 4 6 2 7 8 5 9 3]);
+    else
+        dims = [pars.np/2,numel(te),pars.nv,numel(ti),nv2,1,1,1,numel(pars.tr)];
+        data = reshape(raw,dims);
+        data = permute(data,[1 3 5 2 6 7 4 8 9]);
+    end
 else
-    dims = [pars.np/2,numel(te),pars.nv,max(pars.nv2,1),1,1,numel(ti)];
-    data = reshape(raw,dims);
-    data = permute(data,[1 3 4 2 5 6 7]);
+    if pars.seqcon(3) == 's'
+        dims = [pars.np/2,numel(te),nv2,numel(pars.tr),pars.nv,numel(ti),1,1,1];
+        data = reshape(raw,dims);
+        data = permute(data,[1 5 3 2 8 9 6 7 4]);
+    else
+        dims = [pars.np/2,numel(te),pars.nv,nv2,1,1,numel(pars.tr),1,numel(ti)];
+        data = reshape(raw,dims);
+        data = permute(data,[1 3 4 2 5 6 9 8 7]);
+    end
 end
 
 if isfield(pars,'pelist');
