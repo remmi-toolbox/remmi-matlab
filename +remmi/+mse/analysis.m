@@ -59,7 +59,11 @@ if isfield(dset,'mask')
     end
     mask = bsxfun(@times,mask,ones(msz));
 else
-    mask = squeeze(true(prod(sz(~echoDim),1)));
+    msz = sz(~echoDim);
+    if numel(msz)==1
+        msz(2) = 1;
+    end
+    mask = squeeze(true(prod(msz,1)));
 end
 
 names = fieldnames(metrics);
