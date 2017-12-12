@@ -24,10 +24,10 @@ exponential T2 data is also provided (`full_t2`).
 
 In Matlab, directory names preceded with a `+` are used as _namespaces_.
 For example, if the REMMI-Matlab base directory is in the Matlab path, the 
-REMMI `dataset` class in the `./+remmi` directory can be accessed as:
+REMMI `workspace` class in the `./+remmi` directory can be accessed as:
 
 ```Matlab
-remmi.dataset()
+remmi.workspace()
 ```
 
 Also, the `recon` function in that folder can be accessed as:
@@ -46,26 +46,26 @@ remmi.dwi.dti()
 
 # Saving and Loading Data
 
-The `remmi.dataset` class is intended to provide easy to manage, clean 
-workspaces of saved data. To create a new instance of a REMMI dataset:
+The `remmi.workspace` class is intended to provide easy to manage, clean 
+workspaces of saved data. To create a new instance of a REMMI workspace:
 
 ```Matlab
 fname = 'mydatafile.mat';
-dset = remmi.dataset(fname);
+ws = remmi.workspace(fname);
 ```
 
 where `mydatafile.mat` is the name of the file where data will be 
 stored. Presently, all data is stored in Matlab's native data format, 
 `*.mat`. If `mydatafile.mat` already exists in the current path, any 
-contents of that file will be automatically loaded into dset. 
+contents of that file will be automatically loaded into workspace. 
 
-Any existing Matlab structure can be converted into a REMMI dataset. For
+Any existing Matlab structure can be converted into a REMMI workspace. For
 example:  
 
 ```Matlab
 info = struct();
 info.data = {'cell','array','to','be','saved','to','file'};
-dset = remmi.dataset(fname, info);
+dset = remmi.workspace(fname, info);
 ```
 
 In practice, `dset` can be used like any Matlab structure, and any data put 
@@ -73,18 +73,17 @@ into `dset` is automatically saved to file. For instance, to save a 100x100
 matrix of noise:
 
 ```Matlab
-dset.noise = randn(100);
+ws.noise = randn(100);
 ```
 
-**Note**: For all practical purposes `remmi.dataset` is independent from 
+**Note**: For all practical purposes `remmi.workspace` is independent from 
 the rest of the REMMI toolbox. There is no requirement to use this class 
 for storing/saving data. The rest of the toolbox can be used with or
-without `remmi.dataset`. Likewise, `remmi.dataset` can be used with or 
+without `remmi.workspace`. Likewise, `remmi.workspace` can be used with or 
 without the rest of the toolbox. 
 
 **Warning**: By default, Matlab `.mat` files are limited to 2 GB in size. 
 **TK**
-
 
 # Image Reconstruction
 
@@ -108,7 +107,7 @@ function returns a Matlab structure containing the fields:
 the imaging sequence
 
 In this example, the structure returned by `remmi.recon()` is saved in the 
-REMMI dataset, `dset`, with the variable name `images`.
+REMMI workspace, `dset`, with the variable name `images`.
 
 Helper functions
 

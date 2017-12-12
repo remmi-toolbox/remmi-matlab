@@ -5,13 +5,13 @@ info.spath = './data/dti_mse_study';
 info.exps = 30;
 
 % specify where the data will be stored
-dset = remmi.dataset('full_t2.mat',info);
+ws = remmi.workspace('full_t2.mat',info);
 
 % reconstruct the data
-dset.images = remmi.recon(info);
+ws.images = remmi.recon(info);
 
 % Set a mask based upon the first echo time image
-dset.images = remmi.util.thresholdmask(dset.images);
+ws.images = remmi.util.thresholdmask(ws.images);
 
 % load the default metrics for mT2 analysis
 metrics = remmi.mse.mT2options();
@@ -20,11 +20,11 @@ metrics = remmi.mse.mT2options();
 metrics.S = @(out) out.S;
 
 % Process multi-TE data
-dset.epg = remmi.mse.mT2(dset.images,metrics);
+ws.epg = remmi.mse.mT2(ws.images,metrics);
 
 % draw a few ROIS
 opts.nROIs = 3;
-dset.ROIs = remmi.roi.draw(dset.images,opts);
+ws.ROIs = remmi.roi.draw(ws.images,opts);
 
 % Process ROI data
-dset.ROI_epg = remmi.mse.mT2(dset.ROIs,metrics);
+ws.ROI_epg = remmi.mse.mT2(ws.ROIs,metrics);
