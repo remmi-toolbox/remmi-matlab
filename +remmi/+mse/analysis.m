@@ -36,6 +36,9 @@ if ~isfield(dset,name) || isempty(dset.(name))
 end
 
 sz = size(dset.(name)); 
+if length(sz) < length(dset.labels)
+    sz(length(dset.labels)) = 1;
+end
 seg_sz = 20000; % number of multi-echo measurements to process at one time
 
 % what dimension is multiple echoes?
@@ -71,6 +74,9 @@ maps = cell([length(names) sz(~echoDim)]);
 
 % put the NE dim first
 idx = 1:numel(size(dset.(name)));
+if numel(idx) < length(dset.labels)
+    idx(length(dset.labels)) = length(dset.labels);
+end
 data = permute(dset.(name),[idx(echoDim) idx(~echoDim)]);
 
 % linear index to all the vectors to process
