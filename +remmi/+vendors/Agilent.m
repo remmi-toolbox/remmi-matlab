@@ -106,6 +106,12 @@ classdef Agilent < handle
             end
             pars.nte = numel(pars.te);
             
+            % mess sequences enocdes the echo time differently
+            if strcmpi(strtrim(procpar.seqfil),'mess')
+                pars.te = [procpar.te1 (1:procpar.ne-procpar.ne_late-1)*procpar.te];
+                pars.te = [pars.te pars.te(end)+(1:procpar.ne_late)*.050]';
+            end
+            
             % TR
             pars.tr = procpar.tr(:); % s
             

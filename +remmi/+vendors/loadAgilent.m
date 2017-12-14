@@ -23,6 +23,12 @@ else
     te = 0;
 end
 
+% mess sequences enocdes the echo time differently
+if strcmpi(strtrim(pars.seqfil),'mess')
+    te = [pars.te1 (1:pars.ne-pars.ne_late-1)*pars.te];
+    te = [te te(end)+(1:pars.ne_late)*.050]';
+end
+
 if isfield(pars,'ti')
     ti = pars.ti;
 else
@@ -59,6 +65,11 @@ else
 end
 
 data(:,pe1,:) = data(:,:,:);
+
+% mess sequence alternates PE1 direction
+if strcmpi(strtrim(pars.seqfil),'mess')
+    data(:,:,:,2:2:end,:) = data(:,end:-1:1,:,2:2:end,:);
+end
 
 end
 
