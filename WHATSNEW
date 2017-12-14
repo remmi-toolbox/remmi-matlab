@@ -1,5 +1,8 @@
 What's new in: 
 
+REMMI-matlab version 0.1.6
+* renamed remmi.dataset() to remmi.workspace
+
 REMMI-matlab version 0.1.5
 * Better error handling when Bruker reference scans are not included
 * Very preliminary methods to read/proces Varian data
