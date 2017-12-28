@@ -65,11 +65,11 @@ example:
 ```Matlab
 info = struct();
 info.data = {'cell','array','to','be','saved','to','file'};
-dset = remmi.workspace(fname, info);
+ws = remmi.workspace(fname, info);
 ```
 
-In practice, `dset` can be used like any Matlab structure, and any data put 
-into `dset` is automatically saved to file. For instance, to save a 100x100 
+In practice, `ws` can be used like any Matlab structure, and any data put 
+into `ws` is automatically saved to file. For instance, to save a 100x100 
 matrix of noise:
 
 ```Matlab
@@ -95,7 +95,7 @@ For example:
 ```Matlab
 info.spath = '/path/to/study'; % path to the study folder
 info.exps = 20; % Bruker experiment number contained in info.spath
-dset.images = remmi.recon(info); 
+ws.images = remmi.recon(info); 
 ```
 
 Given a valid study path and list of experiments, the `remmi.recon()` 
@@ -107,7 +107,7 @@ function returns a Matlab structure containing the fields:
 the imaging sequence
 
 In this example, the structure returned by `remmi.recon()` is saved in the 
-REMMI workspace, `dset`, with the variable name `images`.
+REMMI workspace, `ws`, with the variable name `images`.
 
 Helper functions
 
@@ -129,7 +129,7 @@ For the example in above section: if `info.spath` and `info.exps` point to
 diffusion-tensor encoded image data, these images could be processed with:
 
 ```Matlab
-dset.dti = remmi.dwi.dti(dset.images);
+ws.dti = remmi.dwi.dti(ws.images);
 ```
 
 As before, the Matlab structure returned by `remmi.dwi.dti()` is saved in 
