@@ -165,13 +165,18 @@ try
     % PE1 shift
     np = methpars.PVM_EncMatrix(2);
     line = reshape((1:np) - 1 - round(np/2),1,[]);
-    data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase1Offset/methpars.PVM_Fov(2)));
+    
+    % if multi-slice, make the phase offset the correct size
+    ph1_offset = reshape(methpars.PVM_Phase1Offset,[1,1,1,1,nslice]);
+    ph2_offset = reshape(methpars.PVM_Phase2Offset,[1,1,1,1,nslice]);
+    
+    data = bsxfun(@times,data,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)));
 
     % PE2 shift
     if length(methpars.PVM_EncMatrix) > 2
         np = methpars.PVM_EncMatrix(3);
         line = reshape((1:np) - 1 - round(np/2),1,1,[]);
-        data = bsxfun(@times,data,exp(-1i*2*pi*line*methpars.PVM_Phase2Offset/methpars.PVM_Fov(3)));
+        data = bsxfun(@times,data,exp(-1i*2*pi*bsxfun(@times,line,ph2_offset)/methpars.PVM_Fov(3)));
     end
 catch
     % todo: implement PE offset correction for PV5
