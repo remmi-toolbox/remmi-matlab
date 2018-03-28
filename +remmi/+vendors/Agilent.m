@@ -50,13 +50,9 @@ classdef Agilent < handle
             name = cell(size(sid));
             for n=1:length(exps)
                 try
-                    acqpars = remmi.vendors.parsBruker(fullfile(obj.path,sid{n},'acqp'));
-                    time(n) = remmi.vendors.BrukerPV.parsetime(acqpars.ACQ_time);
-                    if acqpars.ACQ_sw_version(4) == '5'
-                        name{n} = [acqpars.ACQ_scan_name ' (E' sid{n} ')'];
-                    else
-                        name{n} = acqpars.ACQ_scan_name;
-                    end
+                    acqpars = remmi.vendors.parsAgilent(fullfile(obj.path,sid{n},'procpar'));
+                    time(n) = remmi.vendors.Agilent.parsetime(acqpars.time_complete);
+                    name{n} = sid{n};
                 catch
                 end
             end
