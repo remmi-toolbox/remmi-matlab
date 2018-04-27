@@ -21,12 +21,15 @@ if nargin<1
     dset = struct();
 end
 
+persistent rpath 
+
 if ~isfield(dset,'spath') || isempty(dset.spath)
     disp('Select the study directory');
-    dset.spath = uigetdir([],'Select study directory');
+    dset.spath = uigetdir(rpath,'Select study directory');
     if dset.spath == 0
         error('No study path given');
     end
+    rpath = dset.spath;
     disp(['The study path is: ' dset.spath]);
 end
 
