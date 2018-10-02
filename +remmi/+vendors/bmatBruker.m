@@ -17,7 +17,7 @@ refPulseDur = str2double(ref{1});
 tssr = 2*pp.methpars.REMMI_EddyDelay + refPulseDur; % ms
 gssr = pp.methpars.RefSliceGrad*gmax/100; % mT/m
 
-tcrush = pp.methpars.EchoSpoilDur; % ms
+tcrush = pp.methpars.EncGradDur; % ms
 gcrush = pp.methpars.REMMI_ModSpoilerAmp(1)*gmax/100; % mT/m
 
 % obtain normalized diffusion directions
