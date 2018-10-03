@@ -130,7 +130,13 @@ if combine_datasets
             par.(names{n}) = cat(length(sz)+1,{pars.(names{n})});
         else
             % array concatenation
-            par.(names{n}) = [pars.(names{n})];
+            try
+                par.(names{n}) = [pars.(names{n})];
+            catch 
+                % this must be a structure, or something else that doesn't
+                % match in size. concatenation it as a cell array
+                par.(names{n}) = {pars.(names{n})};
+            end
         end
 
         if ~isstruct(par.(names{n})(1))
