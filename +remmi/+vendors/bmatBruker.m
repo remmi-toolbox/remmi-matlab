@@ -94,7 +94,7 @@ for n=1:length(dro)
         end
         %bm(:,:,n) = b*dt/1000; % s/mm^2
 
-        bm(:,(n-1)*length(gdiff)+p) = [diag(b);diag(b,-1);diag(b,-2);1]*dt/1000; % s/mm^2
+        bm(:,(n-1)*length(gdiff)+p) = [diag(b);diag(b,-1);diag(b,-2);1000/dt]*dt/1000; % s/mm^2
     end
     
 end
