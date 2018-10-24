@@ -1,7 +1,7 @@
 function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % function [output] = MERA(DATA,FITTING,ANALYSIS)
 %
-% MERA version 2.04
+% MERA version 2.06
 % fits data in structure DATA with a distribution of decaying exponential
 % functions, subject to a non-negative constraint and other options as
 % defined in the structure FITTING. Output includes analysis of
@@ -66,6 +66,7 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %   if FITTING.B1fit = 'y'
 %     FITTING.rangetheta: range of flip angles to test ([130 180])
 %     FITTING.numbertheta: number of flip angles to test (10)
+%     FITTING.fixedT1: the value to fix T1 for the EPG analysis (1)
 %     ** B1 fitting is not configured for two-dimensional fitting
 %     Note this option is only relevant to specific NMR measurements -- see
 %     references to background materials below.
@@ -163,7 +164,12 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % statistics, optimization, and image processing.
 %
 % Please acknowledge use of this product by references the website:
+% https://github.com/markdoes/MERA
+% formerly
 % http://www.vuiis.vanderbilt.edu/~doesmd/MERA/MERA_Toolbox.html
+%
+% MERA was developed with financial support from the NSF 0448915, and
+% NIH EB001744 and EB019980
 %
 % If you have a burning desire to thank me for developing, maintaining, and
 % sharing this code, consider that I am a big fan of single malt whisky!
@@ -185,8 +191,31 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % Version 2.03, 11 Sept 2014
 %   corrected the help comments to clarify the structure name for input data to
 %   be "Data.D" not "Data.d"
+%
+% Version 2.04, 13 Oct 2017
+%   modified the B1_fitting to use uncontrainted fits for finding the
+%   optimal theta, then the selected regularization only for the final fit.
+%   This change is for efficiency only and shouldn't alter results.
+%
+% Version 2.05, 29 July 2018
+%   finally because the website that hosts MERA is going through a required
+%   address change, I figured it was time to move it to github. For this, a
+%   new version number!
+%
+% Version 2.06, 1 Aug 2018
+%   As an exercise to learn how to make code changes through github, I've
+%   added the option to constrain T1 when B1fit = 'y'. In cases of contrast
+%   agent loaded tissue samples, this might make a small difference in the
+%   fitted T2 spectrum, but in the vast majority of cases, it's unimportant
+%   see parameter fitting.fixedT1
+%
+%   Also, %done display changed to steps of 10%
 
 %% Acknowledgements/Contributions
+
+% This code was developed with support from the NSF (grant #0448915), and
+% the NIH (grants EB001744 and EB019980)
+
 
 % Richard D. Dortch provided the MEX NNLS code, and wrote the original
 %   autopeaks.m function (some aspects of which remain in the current code)
@@ -518,7 +547,6 @@ fopsILT = optimset(@fminbnd);
 fopsILT = optimset(fopsILT,'TolX',1e-8,'Display','off');
 
 %% loop through every vector of decay data
-Ntdisp = round(fitting.numbertrains/10);
 
 for i = 1:fitting.numbertrains
   % extract a column vector of data
@@ -533,7 +561,7 @@ for i = 1:fitting.numbertrains
 %     waitbar(i/fitting.numbertrains,w,'Calculating ...');
 %   end
   % update waitbar
-  if strcmpi(analysis.interactive,'n')&& mod(i,Ntdisp)==0
+  if strcmpi(analysis.interactive,'n')&&~mod(i,fitting.numbertrains/10)
     fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',...
       i/fitting.numbertrains*100);
   end
@@ -624,9 +652,6 @@ end
 
 SNR= sum(S)./std(R);
 
-if strcmpi(analysis.interactive,'n')
-  fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...\n',100);
-end
 % if strcmpi(analysis.interactive,'n')
 %   close(w)
 % end
@@ -674,7 +699,7 @@ end
         A(:,1:(K1-1)) = exp(-t*(1./fitting.T'));
       else
         for kt = 1:(K1-1)
-          A(:,kt)=EPGdecaycurve(th,fitting.T(kt),TE,N1);
+          A(:,kt)=EPGdecaycurve(th,fitting.T(kt),TE,N1,fitting.fixedT1);
         end
       end
       A(:,K1) = ones(N1,1);
@@ -707,10 +732,11 @@ end
       end
     end
     
-    function EchoAmp = EPGdecaycurve(theta,T2,TE,N)
+    function EchoAmp = EPGdecaycurve(theta,T2,TE,N,T1)
       % Assumes a CPMG condition -- see Hennig refs above
       % Arbitrarily set T1 = 1 s
-      T1 = 1;
+      % T1 = 1;
+      % version 2.06, added fitting.fixedT1, so T1 now set outside this func
       Nx = 2;
       Np = floor(N/Nx);
       
@@ -1339,9 +1365,9 @@ acceptablefittingfields = {'regtyp','regadj','numbergauss','widthgauss', ...
   'regweight','percentinc','rangeT','numberT','T','rangetheta',...
   'numbertheta','B1fit','nnlscode','twoD','rangeT2','numberT2','T2',...
   'theta_vector','theta_vector_fine','numberechoes',...
-  'numberechoes2','H','theta','T0gauss','numberT0','numbertrains'};
+  'numberechoes2','H','theta','T0gauss','numberT0','numbertrains','fixedT1'};
 defaultfittingvalue = {'mc','gcv',2,10,1e-1,1,[],100,[],[130 180],10, ...
-  'n','nnlsmex','n',[],35,[],[],[],[],[],[],[],[],1,[]};
+  'n','nnlsmex','n',[],35,[],[],[],[],[],[],[],[],1,[],1};
 defaultfitting =cell2struct(defaultfittingvalue,acceptablefittingfields,2);
 
 if (exist('fitting','var')==0 || isempty(fitting))
@@ -1512,6 +1538,16 @@ theta = [];
 theta_vector = linspace(rangetheta(1),rangetheta(2),numbertheta);
 theta_vector_fine = linspace(rangetheta(1),rangetheta(2),100);
 
+if fittingflags(27)
+  fixedT1 = real(fitting.fixedT1);
+  if ~isscalar(fixedT1)||(fixedT1 < 0)
+    fixedT1 = defaultfitting.fixedT1;
+  end
+else
+  fixedT1 = defaultfitting.fixedT1;
+end
+
+
 if fittingflags(13)
   nnlscode = fitting.nnlscode;
   if ~any(strcmpi(nnlscode,{'lsqnonneg','nnlsmex'}))
@@ -1520,9 +1556,7 @@ if fittingflags(13)
 else
   nnlscode = 'nnlsmex';
 end
-if strcmpi(nnlscode,'nnlsmex') && ...
-        ~(exist(['+remmi/+mse/+MERA/nnlsMEX.',mexext],'file')==3)
-%         ~(exist(['nnlsMEX.',mexext],'file')==3)
+if strcmpi(nnlscode,'nnlsmex') && ~(exist(['nnlsMEX.',mexext],'file')==3)
   nnlscode = 'lsqnonneg';
 end
 
@@ -1747,7 +1781,7 @@ fitting = struct('regtyp',regtyp,'regadj',regadj,'numbergauss',numbergauss, ...
   'nnlscode',nnlscode,'rangeT2',rangeT2,'numberT2',numberT2,'T2',T2,...
   'theta',theta,'T0gauss',T0gauss,'numberT0',numberT0,...
   'numberechoes',numberechoes,'numberechoes2',numberechoes2,...
-  'numbertrains',numbertrains);
+  'numbertrains',numbertrains,'fixedT1',fixedT1);
 
 data = struct('D',D,'t',t,'t2',t2);
 
@@ -1808,7 +1842,7 @@ switch nnlscode
     % Call MEX function
     At = A + 0;
     bt = b + 0;
-    x = remmi.mse.MERA.nnlsMEX(At,m,m,n,bt,rnorm,W,ZZ,IDX,mode);
+    x = nnlsMEX(At,m,m,n,bt,rnorm,W,ZZ,IDX,mode);
     
   case 'lsqnonneg'
     x = lsqnonneg(A,b);

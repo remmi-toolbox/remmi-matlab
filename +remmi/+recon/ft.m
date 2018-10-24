@@ -24,9 +24,9 @@ end
 dat = options.apodize_fn(data);
 dat = pad(dat,reconmatrix);
 dat = fftshift(fftshift(fftshift(dat,1),2),3);
-img = fft(fft(dat,reconmatrix(1),1),reconmatrix(2),2);
+img = ifft(ifft(dat,reconmatrix(1),1),reconmatrix(2),2);
 if encmatrix(3) > 1
-    img = fft(img,reconmatrix(3),3);
+    img = ifft(img,reconmatrix(3),3);
 end
 img = fftshift(fftshift(fftshift(img,1),2),3);
 
