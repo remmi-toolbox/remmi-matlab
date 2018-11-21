@@ -10,7 +10,7 @@ function dtiSet = dti(dset,varargin)
 %       if dset or dset.(name) is not given, default reconstruction and
 %       thresholding methods are called
 %       
-%       mode = fitting routine: {'linear'}, 'nonlinear' 
+%       mode = fitting routine: {'weighedlinear'}, 'linear', 'nonlinear' 
 %       name = name of field in dset to fit. Default is 'img'
 % 
 %   Returns a data set containing dti parameter maps of ADC & FA.
@@ -95,15 +95,21 @@ end
 function [diffFun,name] = setoptions(mode,name)
 
 if ~exist('mode','var') || isempty(mode)
-    mode = 'linear';
+    mode = 'weightedlinear';
 end
 
 % what method are we fitting for dti?
-diffFun = @(x,bmat) remmi.dwi.dtilin(x,bmat);
+diffFun = @(x,bmat) remmi.dwi.dtiwlin(x,bmat);
 if exist('mode','var')
     % nonlinear model fitting
-    if strcmpi(mode,'nonlinear')
+    if strcmpi(mode,'linear')
+        disp('using linear least squares')
+        diffFun = @(x,bmat) remmi.dwi.dtilin(x,bmat);
+    elseif strcmpi(mode,'nonlinear')
+        disp('using nonlinear least squares')
         diffFun = @(x,bmat) remmi.dwi.dtinonlin(x,bmat);
+    else
+        disp('using weighted linear least squares')
     end
 end
 

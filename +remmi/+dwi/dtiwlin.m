@@ -1,8 +1,10 @@
-function [adc,fa,vec,eign] = dtilin(sig,bmat)
-% function [adc,fa,vec,eign] = dtilin(sig,bmat,std_noise) performs   
-% linearized diffusion tensor analysis
+function [adc,fa,vec,eign] = dtiwlin(sig,bmat,std_noise)
+% function [adc,fa,vec,eign] = dtiwlin(sig,bmat,std_noise) performs   
+% linearized diffusion tensor analysis via weighted least squares
 %   sig = diffusion-weighted signal
 %   bmat = matrix given as [Dxx,Dyy,Dzz,Dxy,Dyz,Dxz,log(S0);...]'
+%   std_noise = estimate of stdev of the noise. If not given, it is assumed
+%       to be constant
 % 
 % returns:
 %   adc = apparent diffusion coefficient 
@@ -18,11 +20,18 @@ function [adc,fa,vec,eign] = dtilin(sig,bmat)
 %  Note: dtilin tends to be more sensitive to noise than dtinonlin, but 
 %  much faster.
 
+if ~exist('std_noise','var')
+    std_noise = 0.01*max(sig(:))*ones(size(sig));
+end
+
 % linearize the problem
 sig1 = -log(sig/sig(1));
 
+weight = diag(abs(std_noise./sig).^2);
+
 % fit and make the D matrix
-D = (bmat*bmat')\(bmat)*sig1;
+D = (bmat*weight*bmat')\(bmat*weight)*sig1;
+%D = (bmat*bmat')\(bmat)*sig1;
 D = diag(D(1:3)) + (diag(D(4:5),-1) + diag(D(4:5),1) + diag(D(6),-2) + diag(D(6),2))/2;
 
 % eigenvalue/vector decomposition
