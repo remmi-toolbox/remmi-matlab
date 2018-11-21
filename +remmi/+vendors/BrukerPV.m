@@ -170,6 +170,14 @@ classdef BrukerPV < handle
             % load images
             expPath = fullfile(obj.path,exp);
             raw = remmi.vendors.loadBruker(expPath,pars.methpars);
+            
+            % partial fourier acquisitions have a large percent of 
+            % signals==0
+            if sum(raw(:)==0)/numel(raw)>0.01
+                % this is a partial fourier acquisition. Fill in with POCS
+                raw = remmi.recon.pocs(raw);
+            end
+            
             img = remmi.recon.ft(raw,opts);
             
             sz = size(img);
