@@ -10,6 +10,9 @@ function [sig,img] = pocs(zf_sig,niter)
 % sig = k-space signal, with 0s filled in via the POCS algorithm
 % img = images reconstructed from these signals
 %
+% The iterative POCS algorithm is implemented as described in John Pauly's
+%  notes, "Partial k-Space Recconstruction" dated Sept 26, 2007.
+%
 % by Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
 
@@ -44,14 +47,14 @@ lp_filt = sin(fn/wnd*pi/2); % sin filter
 dist(dist>2*wnd) = 2*wnd;
 it_filt = dist/2/wnd;%sin(dist/wnd*pi/2); % ramp filter
 
-% zero-filled image 
+% calculate the zero-filled image 
 zf_img = ift(zf_sig);
 
-% low pass image
+% calculate the low pass image
 lp_sig = bsxfun(@times,zf_sig,lp_filt);
 lp_img = ift(lp_sig);
 
-% zero filed image as the inital guess
+% use the zero filed image as the inital guess
 img = zf_img; 
 
 for n=1:niter

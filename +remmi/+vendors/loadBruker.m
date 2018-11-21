@@ -55,6 +55,9 @@ matrix = methpars.PVM_Matrix;
 if length(encmatrix) < 3 
     encmatrix(3) = 1;
 end
+if length(matrix) < 3 
+    matrix(3) = 1;
+end
 
 pe1table = methpars.PVM_EncSteps1;
 pe1table = pe1table+floor(matrix(2)/2)+1;
@@ -149,7 +152,7 @@ data = ifftshift(ifft(ifftshift(proj,1)),1);
 % use phase encode tables
 data = reshape(data,encmatrix(1),encmatrix(2),encmatrix(3),length(echotimes),...
     nslice,diffImgs,irImgs,mtImgs,nreps);
-datai = zeros(matrix);
+datai = zeros([matrix length(echotimes),nslice,diffImgs,irImgs,mtImgs,nreps]);
 datai(:,pe1table,pe2table,:,:,:,:,:,:,:,:) = data;
 
 % flip odd echoes in gradient echo sequences
