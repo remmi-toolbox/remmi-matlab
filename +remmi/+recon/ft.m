@@ -1,6 +1,9 @@
 function img = ft(data,options)
-% img = ft(data,options) performs a basic 2d or 3d fourier transform on
+% img = ft(data,options) performs a basic 2d or 3d inverse fourier transform on
 % data. Default options are set in remmi.recon.options();
+%
+% opts.apodize_fn = function to apodize fourier data
+% opts.matrix_sz  = matrix size for reconstruction
 %
 % by Kevin Harkins & Mark Does, Vanderbilt University
 % for the REMMI Toolbox
