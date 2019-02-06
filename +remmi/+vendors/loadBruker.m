@@ -172,8 +172,8 @@ try
     line = reshape((1:np) - 1 - round(np/2),1,[]);
     
     % if multi-slice, make the phase offset the correct size
-    ph1_offset = reshape(methpars.PVM_Phase1Offset,[1,1,1,1,nslice]);
-    ph2_offset = reshape(methpars.PVM_Phase2Offset,[1,1,1,1,nslice]);
+    ph1_offset = reshape(methpars.PVM_EffPhase1Offset,[1,1,1,1,nslice]);
+    ph2_offset = reshape(methpars.PVM_EffPhase2Offset,[1,1,1,1,nslice]);
     
     datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)));
 
