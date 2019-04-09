@@ -47,6 +47,14 @@ if isfield(methpars,'REMMI_NMagTrans')
     end
 end
 
+% Number of BsB1 images
+bsImgs = 1;
+if isfield(methpars,'REMMI_BsB1OnOff')
+    if strcmp(methpars.REMMI_BsB1OnOff,'On')
+        bsImgs = 2;
+    end
+end
+
 nslice = sum(methpars.PVM_SPackArrNSlices);
 nreps = methpars.PVM_NRepetitions;
 
@@ -69,35 +77,46 @@ else
     pe2table = 1;
 end
 
+fid=fopen([dataPath,'/fid']);
+if (fid == -1)
+    error('Cannot open fid file in %s', dataPath);
+end
+
+raw=fread(fid,'bit32'); %long=32-bit unsigned integer, signed=bit32
+fclose(fid);
+
+% Bruker requires reaodut lines to have memory alignment of 2^n 
+roalign=length(raw)/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
+    diffImgs/irImgs/mtImgs/bsImgs/nreps/nslice;
+
 % if reference phase data exists, read it in
-ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,nreps);
-ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,nreps);
+ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,1,nreps);
+ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,1,nreps);
 if isfield(methpars,'REMMI_ProcnoResult')
     vals = remmi.util.strsplit(methpars.REMMI_ProcnoResult(2:end-1),',');
     [fstudy,~] = fileparts(dataPath);
     if ~strcmp(strtrim(vals{end-1}),'0')
-        ph_fid = fopen(fullfile(fstudy,strtrim(vals{end-1}),'fid'));
+        ph_path = fullfile(fstudy,strtrim(vals{end-1}));
+        ph_fid = fopen(fullfile(ph_path,'fid'));
         if ph_fid < 0
             warning('Phase reference scan not found');
         else
             ph_raw = fread(ph_fid,'bit32');
             fclose(ph_fid);
+            %ph_pars = remmi.vendors.parsBruker(fullfile(ph_path,'method'));
 
             % real + imaginary
             ph_raw = reshape(ph_raw,2,length(ph_raw)/2);
             ph_raw = ph_raw(1,:) + 1i*ph_raw(2,:);
 
-            % related to bruker encoding workaround
-            navg = max(8/rarefactor*length(echotimes),1);
-
             % set format to [readout, echo, etc]
-            ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),navg,nslice, ...
-                diffImgs,1,1,nreps);
+            ph_raw = reshape(ph_raw,roalign,rarefactor*length(echotimes),[],nslice, ...
+                diffImgs,1,1,1,nreps);
 
             % bruker encoding workaround
             ph_raw = sum(ph_raw,3);
             ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),nslice, ...
-                diffImgs,1,1,nreps);
+                diffImgs,1,1,1,nreps);
 
             ph_raw = ph_raw(1:encmatrix(1),:);
 
@@ -112,19 +131,6 @@ if isfield(methpars,'REMMI_ProcnoResult')
     end
 end
 
-
-fid=fopen([dataPath,'/fid']);
-if (fid == -1)
-    error('Cannot open fid file in %s', dataPath);
-end
-
-raw=fread(fid,'bit32'); %long=32-bit unsigned integer, signed=bit32
-fclose(fid);
-
-% Bruker requires reaodut lines to have memory alignment of 2^n 
-roalign=length(raw)/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
-    diffImgs/irImgs/mtImgs/nreps/nslice;
-
 % combine real/imaginary
 data = reshape(raw,2,length(raw)/2);
 data = data(1,:) + 1i*data(2,:);
@@ -132,7 +138,7 @@ data = data(1,:) + 1i*data(2,:);
 % at this point, the array index is : 
 % [ro,rarefactor,echoes,slices,pe1,pe2,diff,mtir,nreps]
 data = reshape(data,roalign,rarefactor,length(echotimes),nslice,...
-    encmatrix(2)/rarefactor,encmatrix(3),diffImgs,irImgs,mtImgs,nreps);
+    encmatrix(2)/rarefactor,encmatrix(3),diffImgs,irImgs,mtImgs,bsImgs,nreps);
 
 % reorder
 data = permute(data,[1,2,5,6,3,4,7:ndims(data)]);
@@ -151,8 +157,8 @@ data = ifftshift(ifft(ifftshift(proj,1)),1);
 
 % use phase encode tables
 data = reshape(data,encmatrix(1),encmatrix(2),encmatrix(3),length(echotimes),...
-    nslice,diffImgs,irImgs,mtImgs,nreps);
-datai = zeros([matrix length(echotimes),nslice,diffImgs,irImgs,mtImgs,nreps]);
+    nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps);
+datai = zeros([matrix length(echotimes),nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps]);
 datai(:,pe1table,pe2table,:,:,:,:,:,:,:,:) = data;
 
 % flip odd echoes in gradient echo sequences
