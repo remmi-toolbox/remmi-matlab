@@ -3,7 +3,7 @@ classdef BrukerPV < handle
     % Paravision datasets and images. 
     properties
         path
-        labels= {'RO','PE1','PE2','NE','NS','DW','IR','MT','NR'};
+        labels= {'RO','PE1','PE2','NE','NS','DW','IR','MT','BS','NR'};
     end
     
     methods(Static)
