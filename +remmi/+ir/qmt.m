@@ -139,7 +139,7 @@ if ~exist('name','var') || isempty(name)
 end
 
 if ~exist('init','var') || isempty(init)
-  init.b0 = str2func('@(sig) [max(sig), max(sig)/10,  25,   2, sig(1)/sig(end)]');
+  init.b0 = str2func('@(sig) [max(sig), max(sig)/10,  25,   2, max(-1,-sig(1)/sig(end))]');
   init.lb = str2func('@(sig) [       0,           0,   2,   0,  -1]');
   init.ub = str2func('@(sig) [     inf,         inf, 200, inf,   1]');
 end
