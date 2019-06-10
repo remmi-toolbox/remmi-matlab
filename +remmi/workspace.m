@@ -33,20 +33,21 @@ classdef workspace < dynamicprops
             if exist(fname,'var') || isempty(fname)
                 error('workspace() requires a filename');
             elseif ischar(fname)
-                if ~isstrprop(fname(1),'alpha')
-                    error('The first character of "name" must be a letter');
-                else
-                    obj.filename = fname;
-                end
+                obj.filename = fname;
             else
                 error('"fname" must be a character string');
             end
             
             [p,n,ext] = fileparts(obj.filename);
+            if ~endsWith(ext,'.mat')
+                % the extention needs to end with '.mat', otherwise weird
+                % behaviour can occur
+                ext = strcat(ext,'.mat');
+            end
             if isempty(p)
                 obj.filename = fullfile(pwd,[n ext]);
             end
-            
+
             % does this file exist? If so, pre-load it
             if exist(obj.filename,'file')
                 % load the current properties
