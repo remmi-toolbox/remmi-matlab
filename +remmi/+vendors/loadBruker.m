@@ -55,6 +55,12 @@ if isfield(methpars,'REMMI_BsB1OnOff')
     end
 end
 
+% Number of recieve coils
+ncoil = 1;
+if isfield(methpars,'PVM_EncNReceivers')
+    ncoil = methpars.PVM_EncNReceivers;
+end
+
 nslice = sum(methpars.PVM_SPackArrNSlices);
 nreps = methpars.PVM_NRepetitions;
 
@@ -78,6 +84,11 @@ else
 end
 
 fid=fopen([dataPath,'/fid']);
+
+if (fid == -1)
+    fid=fopen([dataPath,'/rawdata.job0']); % PV360 and others (?)
+end
+
 if (fid == -1)
     error('Cannot open fid file in %s', dataPath);
 end
@@ -86,7 +97,7 @@ raw=fread(fid,'bit32'); %long=32-bit unsigned integer, signed=bit32
 fclose(fid);
 
 % Bruker requires reaodut lines to have memory alignment of 2^n 
-roalign=length(raw)/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
+roalign=length(raw)/ncoil/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
     diffImgs/irImgs/mtImgs/bsImgs/nreps/nslice;
 
 % if reference phase data exists, read it in
@@ -99,6 +110,9 @@ if isfield(methpars,'REMMI_ProcnoResult')
         ph_path = fullfile(fstudy,strtrim(vals{end-1}));
         ph_fid = fopen(fullfile(ph_path,'fid'));
         if ph_fid < 0
+            ph_fid = fopen(fullfile(fstudy,strtrim(vals{end-1}),'rawdata.job0'));
+        end
+        if ph_fid < 0
             warning('Phase reference scan not found');
         else
             ph_raw = fread(ph_fid,'bit32');
@@ -110,12 +124,16 @@ if isfield(methpars,'REMMI_ProcnoResult')
             ph_raw = ph_raw(1,:) + 1i*ph_raw(2,:);
 
             % set format to [readout, echo, etc]
-            ph_raw = reshape(ph_raw,roalign,rarefactor*length(echotimes),[],nslice, ...
+            ph_raw = reshape(ph_raw,roalign,ncoil,rarefactor*length(echotimes),[],nslice, ...
                 diffImgs,1,1,1,nreps);
+            
+            ph_raw = permute(ph_raw,[1 3 4 2 5 6 7 8 9 10]);
+            % order is now [ro, echo train, navg, ncoil, nslice, ndiff, ?,
+            % ?, ?, rep]
 
             % bruker encoding workaround
             ph_raw = sum(ph_raw,3);
-            ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),nslice, ...
+            ph_raw = reshape(ph_raw,[],rarefactor*length(echotimes),ncoil,nslice, ...
                 diffImgs,1,1,1,nreps);
 
             ph_raw = ph_raw(1:encmatrix(1),:);
@@ -124,9 +142,9 @@ if isfield(methpars,'REMMI_ProcnoResult')
             [ph_ref0,ph_ref1] = dwi_phase_corr(ph_raw);
 
             ph_ref0 = reshape(ph_ref0,[1 rarefactor 1 1 length(echotimes) ...
-                nslice diffImgs 1 1 nreps]);
+                ncoil nslice diffImgs 1 1 nreps]);
             ph_ref1 = reshape(ph_ref1,[1 rarefactor 1 1 length(echotimes) ...
-                nslice diffImgs 1 1 nreps]);
+                ncoil nslice diffImgs 1 1 nreps]);
         end
     end
 end
@@ -137,13 +155,13 @@ data = data(1,:) + 1i*data(2,:);
 
 % at this point, the array index is : 
 % [ro,rarefactor,echoes,slices,pe1,pe2,diff,mtir,nreps]
-data = reshape(data,roalign,rarefactor,length(echotimes),nslice,...
+data = reshape(data,roalign,ncoil,rarefactor,length(echotimes),nslice,...
     encmatrix(2)/rarefactor,encmatrix(3),diffImgs,irImgs,mtImgs,bsImgs,nreps);
 
 % reorder
-data = permute(data,[1,2,5,6,3,4,7:ndims(data)]);
+data = permute(data,[1,3,6,7,4,2,5,8:ndims(data)]);
 data = remmi.util.slice(data,1,1:encmatrix(1));
-% format is now [ro,rare,pe1,pe2,echoes,slices,diffImgs,irImgs,mtImgs,nreps]
+% format is now [ro,rare,pe1,pe2,echoes,coils,slices,diffImgs,irImgs,mtImgs,nreps]
 
 % move to projection space
 proj = fftshift(fft(fftshift(data,1)),1);
@@ -157,9 +175,9 @@ data = ifftshift(ifft(ifftshift(proj,1)),1);
 
 % use phase encode tables
 data = reshape(data,encmatrix(1),encmatrix(2),encmatrix(3),length(echotimes),...
-    nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps);
-datai = zeros([matrix length(echotimes),nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps]);
-datai(:,pe1table,pe2table,:,:,:,:,:,:,:,:) = data;
+    ncoil,nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps);
+datai = zeros([matrix length(echotimes),ncoil,nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps]);
+datai(:,pe1table,pe2table,:,:,:,:,:,:,:,:,:) = data;
 
 % flip odd echoes in gradient echo sequences
 if methpars.PVM_NEchoImages>1 && ~isfield(methpars,'RefPulse1')
@@ -167,31 +185,31 @@ if methpars.PVM_NEchoImages>1 && ~isfield(methpars,'RefPulse1')
     if isfield(methpars,'EchoAcqMode')
         if strcmp(methpars.EchoAcqMode,'allEchoes')
             disp('fliping...')
-            datai(:,:,:,2:2:end,:,:,:,:,:,:) = datai(end:-1:1,:,:,2:2:end,:,:,:,:,:,:);
+            datai(:,:,:,2:2:end,:,:,:,:,:,:,:) = datai(end:-1:1,:,:,2:2:end,:,:,:,:,:,:,:);
         end
     end
 end
 
-try
-    % PE1 shift
-    np = methpars.PVM_Matrix(2);
-    line = reshape((1:np) - 1 - round(np/2),1,[]);
-    
-    % if multi-slice, make the phase offset the correct size
-    ph1_offset = reshape(methpars.PVM_EffPhase1Offset,[1,1,1,1,nslice]);
-    ph2_offset = reshape(methpars.PVM_EffPhase2Offset,[1,1,1,1,nslice]);
-    
-    datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)));
+% phase encode off isocenter shift 
+ph1_offset = 0;
+ph2_offset = 0;
+if isfield(methpars,'PVM_EffPhase1Offset')
+    ph1_offset = methpars.PVM_EffPhase1Offset;
+end
+if isfield(methpars,'PVM_EffPhase2Offset')
+    ph1_offset = methpars.PVM_EffPhase2Offset;
+end
 
-    % PE2 shift
-    if length(methpars.PVM_EncMatrix) > 2
-        np = methpars.PVM_EncMatrix(3);
-        line = reshape((1:np) - 1 - round(np/2),1,1,[]);
-        datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph2_offset)/methpars.PVM_Fov(3)));
-    end
-catch
-    % todo: implement PE offset correction for PV5
-    warning('PE offsets are uncorrected');
+% PE1 shift
+np = methpars.PVM_EncMatrix(2);
+line = reshape((1:np) - 1 - round(np/2),1,[]);
+datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)));
+
+% PE2 shift
+if length(methpars.PVM_EncMatrix) > 2
+    np = methpars.PVM_EncMatrix(3);
+    line = reshape((1:np) - 1 - round(np/2),1,1,[]);
+    datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph2_offset)/methpars.PVM_Fov(3)));
 end
 
 end

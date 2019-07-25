@@ -3,7 +3,7 @@ classdef BrukerPV < handle
     % Paravision datasets and images. 
     properties
         path
-        labels= {'RO','PE1','PE2','NE','NS','DW','IR','MT','BS','NR'};
+        labels= {'RO','PE1','PE2','NE','NC','NS','DW','IR','MT','BS','NR'};
     end
     
     methods(Static)
@@ -57,7 +57,7 @@ classdef BrukerPV < handle
             for n=1:length(exps)
                 try
                     acqpars = remmi.vendors.parsBruker(fullfile(obj.path,sid{n},'acqp'));
-                    time(n) = remmi.vendors.BrukerPV.parsetime(acqpars.ACQ_time);
+                    time(n) = acqpars.ACQ_abs_time(1); %remmi.vendors.BrukerPV.parsetime(acqpars.ACQ_time);
                     if acqpars.ACQ_sw_version(4) == '5'
                         name{n} = [acqpars.ACQ_scan_name ' (E' sid{n} ')'];
                     else
@@ -141,7 +141,7 @@ classdef BrukerPV < handle
             % for offset MT sequences, what is the range in frequence
             % offsets, and rf power?
             if isfield(methpars,'PVM_MagTransOnOff')
-                if strcmp(methpars.PVM_MagTransOnOff,'On');
+                if strcmp(methpars.PVM_MagTransOnOff,'On')
                     pars.mt_offset = methpars.PVM_MagTransFL;
                     pars.mt_power = methpars.PVM_MagTransPower;
                 end
@@ -152,11 +152,7 @@ classdef BrukerPV < handle
             pars.sequence = methpars.Method;
 
             % time the data was acquired
-            val = acqpars.ACQ_time;
-            if ~strcmp(val,'na')
-                val = remmi.vendors.BrukerPV.parsetime(val);
-            end
-            pars.time = val;
+            pars.time = datetime(acqpars.ACQ_abs_time,'convertfrom','posixtime');
 
             % store all the other parameters, in case someone needs them
             pars.methpars = methpars;
@@ -179,6 +175,13 @@ classdef BrukerPV < handle
             end
             
             img = remmi.recon.ft(raw,opts);
+            
+            % coil combinations
+            coil_idx = find(ismember(obj.labels,{'NC'}));
+            if size(img,coil_idx) > 1
+                % for now, just sum of squares coil combination
+                img = sqrt(sum(img.*conj(img),coil_idx));
+            end
             
             sz = size(img);
             if size(img,length(obj.labels))==1
