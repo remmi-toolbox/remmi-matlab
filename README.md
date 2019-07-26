@@ -9,7 +9,7 @@ diffusion, etc.
 
 REMMI-Matlab is written by Kevin Harkins (<kevin.harkins@vanderbilt.edu>) 
 and Mark Does (<mark.does@vanderbilt.edu>), Vanderbilt University. This 
-work is supported by NIH Grant **TK**
+work is supported by NIH Grant EB019980.
 
 
 # REMMI-Matlab Examples
