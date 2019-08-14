@@ -142,9 +142,9 @@ if isfield(methpars,'REMMI_ProcnoResult')
             [ph_ref0,ph_ref1] = dwi_phase_corr(ph_raw);
 
             ph_ref0 = reshape(ph_ref0,[1 rarefactor 1 1 length(echotimes) ...
-                ncoil nslice diffImgs 1 1 nreps]);
+                ncoil nslice diffImgs 1 1 1 nreps]);
             ph_ref1 = reshape(ph_ref1,[1 rarefactor 1 1 length(echotimes) ...
-                ncoil nslice diffImgs 1 1 nreps]);
+                ncoil nslice diffImgs 1 1 1 nreps]);
         end
     end
 end
