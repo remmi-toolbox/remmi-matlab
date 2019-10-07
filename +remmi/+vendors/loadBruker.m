@@ -197,7 +197,7 @@ if isfield(methpars,'PVM_EffPhase1Offset')
     ph1_offset = methpars.PVM_EffPhase1Offset;
 end
 if isfield(methpars,'PVM_EffPhase2Offset')
-    ph1_offset = methpars.PVM_EffPhase2Offset;
+    ph2_offset = methpars.PVM_EffPhase2Offset;
 end
 
 % PE1 shift
