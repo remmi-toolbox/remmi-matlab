@@ -101,8 +101,8 @@ roalign=length(raw)/ncoil/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
     diffImgs/irImgs/mtImgs/bsImgs/nreps/nslice;
 
 % if reference phase data exists, read it in
-ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,1,nreps);
-ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),nslice,diffImgs,1,1,1,nreps);
+ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),ncoil,nslice,diffImgs,1,1,nreps);
+ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),ncoil,nslice,diffImgs,1,1,nreps);
 if isfield(methpars,'REMMI_ProcnoResult')
     vals = remmi.util.strsplit(methpars.REMMI_ProcnoResult(2:end-1),',');
     [fstudy,~] = fileparts(dataPath);
@@ -142,9 +142,9 @@ if isfield(methpars,'REMMI_ProcnoResult')
             [ph_ref0,ph_ref1] = dwi_phase_corr(ph_raw);
 
             ph_ref0 = reshape(ph_ref0,[1 rarefactor 1 1 length(echotimes) ...
-                ncoil nslice diffImgs 1 1 1 nreps]);
+                ncoil nslice diffImgs 1 1 nreps]);
             ph_ref1 = reshape(ph_ref1,[1 rarefactor 1 1 length(echotimes) ...
-                ncoil nslice diffImgs 1 1 1 nreps]);
+                ncoil nslice diffImgs 1 1 nreps]);
         end
     end
 end
