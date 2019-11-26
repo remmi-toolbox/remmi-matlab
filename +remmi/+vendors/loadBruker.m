@@ -194,10 +194,10 @@ end
 ph1_offset = 0;
 ph2_offset = 0;
 if isfield(methpars,'PVM_EffPhase1Offset')
-    ph1_offset = methpars.PVM_EffPhase1Offset;
+    ph1_offset = reshape(methpars.PVM_EffPhase1Offset,1,1,1,1,1,[]);
 end
 if isfield(methpars,'PVM_EffPhase2Offset')
-    ph2_offset = methpars.PVM_EffPhase2Offset;
+    ph2_offset = reshape(methpars.PVM_EffPhase2Offset,1,1,1,1,1,[]);
 end
 
 % PE1 shift
