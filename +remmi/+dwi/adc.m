@@ -64,6 +64,15 @@ else
     isB0(1:nB0) = true;
 end
 
+if ~any(isB0)
+    % DwAo images = 0, look for b-value=0
+    isB0 = dset.pars.methpars.PVM_DwBvalEach==0;
+    
+    if ~any(isB0)
+        error('no b=0 images are given');
+    end
+end
+
 % initalize data set to appropriate sizes
 adcSet.adc = zeros([sz(~dwDim) sum(~isB0)]);
 

@@ -25,7 +25,7 @@ if ~exist('dset','var')
 end
 
 if ~isfield(dset,name) || isempty(dset.(name)) ||  ...
-        ~isfield(dset.(name),'mask') || isempty(dset.(name).mask)
+        ~isfield(dset,'mask') || isempty(dset.mask)
     dset = remmi.util.thresholdmask(dset);
 end
 
