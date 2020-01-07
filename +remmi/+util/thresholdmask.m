@@ -41,7 +41,7 @@ if ~exist('val','var') || isempty(val)
     val = 0.1;
 end
 if ~exist('label','var') || isempty(label)
-    label = {'RO','PE1','PE2'};
+    label = {'RO','PE1','PE2','NS'};
 end
 if ~exist('name','var') || isempty(name)
     name = 'img';
