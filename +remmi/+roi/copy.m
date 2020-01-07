@@ -6,8 +6,8 @@ function rois = copy(dest_set,src_set)
 %       dest_set.labels = cell array of labels to dset.(strname) dimensions
 %
 %       src_set.x{:} & str_set.yi{:} contain polygon coordinates for
-%       previously drawn ROIs, like that in remmi.roi.draw()
-%       src_set.roiopts contains options from previous roi drawing
+%       previously drawn ROIs, provided by remmi.roi.draw()
+%       src_set.roiopts contains options provided by remmi.roi.draw()
 % 
 %   Returns a data set containing reduced image data from the ROIs
 %

@@ -3,22 +3,22 @@ function rois = draw(dset,varargin)
 % dset
 %
 %       dset.(strname) = data to process
-%       dset.mask = mask for processing data
-%       dset.pars = basic remmi parameter set including ti & td. 
 %       dset.labels = cell array of labels to dset.img dimensions
 %
 %       if dset or dset.(strname) is not given, default reconstruction and
 %       thresholding methods are called
 %
-%       options.nROIs = number of ROIs or a cell array of ROI names
+%       options.nROIs = number of ROIs or a cell array of ROI names.
+%           default = 1
 %
-%       options.labels = label of dimensions (matching dset.(strname).labels) over
-%       which to draw ROIs
+%       options.labels = a cell array of strings (with length 2) specifying  
+%           the two dimensions over which ROIs will be drawn. 
+%           default = {'RO','PE1'}
 %
-%       options.strname = name of field in dset to fit. Default is 'img'
+%       options.strname = name of field in dset to process. Default is 'img'
 %
 %       options.roifun = function handle on how to combine roi results. The
-%       function must take a vector and return a single value. Defualt = @mean
+%       function must take a vector and return a single value. default = @mean
 % 
 %   Returns a data set containing reduced image data from the ROIs
 %
