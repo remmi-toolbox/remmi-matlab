@@ -179,6 +179,10 @@ data = reshape(data,encmatrix(1),encmatrix(2),encmatrix(3),length(echotimes),...
 datai = zeros([matrix length(echotimes),ncoil,nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps]);
 datai(:,pe1table,pe2table,:,:,:,:,:,:,:,:,:) = data;
 
+% reorder slices
+sl_order = methpars.PVM_ObjOrderList + 1;
+datai(:,:,:,:,sl_order,:,:,:,:,:,:) = datai;
+
 % flip odd echoes in gradient echo sequences
 if methpars.PVM_NEchoImages>1 && ~isfield(methpars,'RefPulse1')
     % no refocusing pulse. This must be a gradient echo sequence. 
