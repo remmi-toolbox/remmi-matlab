@@ -56,9 +56,10 @@ else
         if pars.navigator == 'y'
             necho = numel(te)+1;
         end
-        dims = [pars.np/2,necho,pars.nv,nv2,1,numel(pars.dro),numel(pars.tr),1,numel(ti)];
+        dims = [pars.np/2,necho,pars.ns,pars.nv,nv2,numel(pars.dro),...
+            numel(pars.tr),1,numel(ti)];
         data = reshape(raw,dims);
-        data = permute(data,[1 3 4 2 5 6 9 8 7]);
+        data = permute(data,[1 4 5 2 3 6 9 8 7]);
         
         if pars.navigator == 'y'
             % cut the navigator echo (?)
