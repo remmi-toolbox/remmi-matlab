@@ -52,9 +52,18 @@ else
         data = reshape(raw,dims);
         data = permute(data,[1 5 3 2 8 9 6 7 4]);
     else
-        dims = [pars.np/2,numel(te),pars.nv,nv2,1,1,numel(pars.tr),1,numel(ti)];
+        necho = numel(te);
+        if pars.navigator == 'y'
+            necho = numel(te)+1;
+        end
+        dims = [pars.np/2,necho,pars.nv,nv2,1,numel(pars.dro),numel(pars.tr),1,numel(ti)];
         data = reshape(raw,dims);
         data = permute(data,[1 3 4 2 5 6 9 8 7]);
+        
+        if pars.navigator == 'y'
+            % cut the navigator echo (?)
+            data = data(:,:,:,1:end-1,:,:,:,:,:);
+        end
     end
 end
 
