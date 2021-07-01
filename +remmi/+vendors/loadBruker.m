@@ -101,8 +101,8 @@ roalign=length(raw)/ncoil/length(echotimes)/encmatrix(2)/encmatrix(3)/2/...
     diffImgs/irImgs/mtImgs/bsImgs/nreps/nslice;
 
 % if reference phase data exists, read it in
-ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),ncoil,nslice,diffImgs,1,1,nreps);
-ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),ncoil,nslice,diffImgs,1,1,nreps);
+ph_ref0 = zeros(1,rarefactor,1,1,length(echotimes),ncoil,nslice,diffImgs,1,1,1,nreps);
+ph_ref1 = zeros(1,rarefactor,1,1,length(echotimes),ncoil,nslice,diffImgs,1,1,1,nreps);
 if isfield(methpars,'REMMI_ProcnoResult')
     vals = remmi.util.strsplit(methpars.REMMI_ProcnoResult(2:end-1),',');
     [fstudy,~] = fileparts(dataPath);
@@ -124,10 +124,11 @@ if isfield(methpars,'REMMI_ProcnoResult')
             ph_raw = ph_raw(1,:) + 1i*ph_raw(2,:);
 
             % set format to [readout, echo, etc]
+            % [ro,ncoil,rarefactor,echoes,slices,pe1,pe2,diff,mtir,nreps]
             ph_raw = reshape(ph_raw,roalign,ncoil,rarefactor*length(echotimes),[],nslice, ...
                 diffImgs,1,1,1,nreps);
             
-            ph_raw = permute(ph_raw,[1 3 4 2 5 6 7 8 9 10]);
+            ph_raw = permute(ph_raw,[1 3 4 2 5 6 7 8:12]);
             % order is now [ro, echo train, navg, ncoil, nslice, ndiff, ?,
             % ?, ?, rep]
 
@@ -154,7 +155,7 @@ data = reshape(raw,2,length(raw)/2);
 data = data(1,:) + 1i*data(2,:);
 
 % at this point, the array index is : 
-% [ro,rarefactor,echoes,slices,pe1,pe2,diff,mtir,nreps]
+% [ro,ncoil,rarefactor,echoes,slices,pe1,pe2,diff,mtir,,mt,BS,nreps]
 data = reshape(data,roalign,ncoil,rarefactor,length(echotimes),nslice,...
     encmatrix(2)/rarefactor,encmatrix(3),diffImgs,irImgs,mtImgs,bsImgs,nreps);
 
