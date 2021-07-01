@@ -34,7 +34,7 @@ classdef Agilent < handle
             
             % is this a valid study?
             if ~obj.isValid(spath)
-                error('Study is not valid: %s',spath);
+                warning('Study is not valid: %s',spath);
             end 
         end
         
