@@ -23,6 +23,12 @@ else
     te = 0;
 end
 
+if isfield(pars,'dro')
+    ndiff = numel(pars.dro);
+else
+    ndiff = 1;
+end
+
 % mess sequences enocdes the echo time differently
 if strcmpi(strtrim(pars.seqfil),'mess')
     te = [pars.te1 (1:pars.ne-pars.ne_late-1)*pars.te];
@@ -57,7 +63,7 @@ else
         if pars.navigator == 'y'
             necho = numel(te)+1;
         end
-        dims = [pars.np/2,necho,pars.ns,pars.nv,nv2,numel(pars.dro),...
+        dims = [pars.np/2,necho,pars.ns,pars.nv,nv2,ndiff,...
             numel(pars.tr),1,numel(ti)];
         data = reshape(raw,dims);
         data = permute(data,[1 4 5 2 3 6 9 8 7]);
