@@ -48,9 +48,10 @@ if pars.seqcon(4) == 's'
     end
 else
     if pars.seqcon(3) == 's'
-        dims = [pars.np/2,numel(te),nv2,numel(pars.tr),pars.nv,numel(ti),1,1,1];
+        % {'RO','PE1','PE2','NE','NS','DW','IR','MT','NR'};
+        dims = [pars.np/2,numel(te),pars.ns,numel(pars.tr),pars.nv,numel(ti),nv2,1,1,1];
         data = reshape(raw,dims);
-        data = permute(data,[1 5 3 2 8 9 6 7 4]);
+        data = permute(data,[1 5 7 2 3 8 6 9 4]);
     else
         necho = numel(te);
         if pars.navigator == 'y'
@@ -75,6 +76,11 @@ else
 end
 
 data(:,pe1,:) = data(:,:,:);
+
+% PE1 shift
+np = pars.nv;
+line = reshape((1:np) - 1 - round(np/2),1,[]);
+data = bsxfun(@times,data,exp(-1i*2*pi*bsxfun(@times,line,pars.ppe)/pars.lpe));
 
 % mess sequence alternates PE1 direction
 if strcmpi(strtrim(pars.seqfil),'mess')
