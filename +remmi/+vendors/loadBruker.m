@@ -208,7 +208,7 @@ if isfield(methpars,'PVM_EffPhase2Offset')
 end
 
 % PE1 shift
-np = methpars.PVM_EncMatrix(2);
+np = methpars.PVM_Matrix(2);
 line = reshape((1:np) - 1 - round(np/2),1,[]);
 datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)));
 
