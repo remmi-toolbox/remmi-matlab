@@ -32,6 +32,7 @@ function t2set = mT2(dset,varargin)
 [metrics,fitting,analysis,name] = remmi.mse.mT2options(varargin{:});
 
 if ~isfield(dset,name) || isempty(dset.(name))
+    disp('Using default mask') % alert user that default mask in use  
     dset = remmi.util.thresholdmask(remmi.recon(dset));
 end
 

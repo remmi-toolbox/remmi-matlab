@@ -24,8 +24,12 @@ if ~exist('dset','var')
     dset = struct();
 end
 
+% MDD changed to assume mask is at the same level as name, not a field in
+% name
 if ~isfield(dset,name) || isempty(dset.(name)) ||  ...
         ~isfield(dset,'mask') || isempty(dset.mask)
+      %         ~isfield(dset.(name),'mask') || isempty(dset.(name).mask)
+    disp('Using default mask') % alert user that default mask in use
     dset = remmi.util.thresholdmask(dset);
 end
 
