@@ -191,5 +191,53 @@ classdef BrukerPV < handle
             labels = obj.labels(sz>1);
             img = squeeze(img);
         end
+
+        function [img,labels,pars] = loadImg(obj,exp1,opts)
+            % load parameters
+            pars = obj.loadPars(exp1);
+
+            % custom hack for PE reversed EPI
+            rid = '1';
+            if exist('opts','var')
+                if isfield(opts,'id')
+                    rid = opts.id;
+                end
+            end
+
+            pars.recopars = remmi.vendors.parsBruker(fullfile(obj.path,exp1,...
+                'pdata',rid,'reco'));
+                      
+            fileName = fullfile(obj.path,exp1,'pdata',rid,'2dseq');
+            fid=fopen(fileName);
+            if fid < 0
+                error('cannot open %s',fileName)
+            end
+            % 2dseq is formated 16 bit signed integer
+            raw=fread(fid,'int16'); 
+            fclose(fid);
+            
+            img = reshape(raw,pars.recopars.RECO_size(1),...
+                pars.recopars.RECO_size(2),...
+                pars.recopars.RecoObjectsPerRepetition,[]);
+
+            if isfield(pars.methpars,'PhaseEncodeReversed')
+                if isfield(pars.methpars,'PVM_EffPhase1Offset')
+                    if strcmp(pars.methpars.PhaseEncodeReversed,'Yes')
+                        proj = fftshift(fft(fftshift(img,2),[],2),2);
+                        % reverse the PE2 direction x2
+                        np = pars.methpars.PVM_Matrix(2);
+                        line = reshape((1:np) - 1 - round(np/2),1,[]);
+                        ph1_offset = reshape(pars.methpars.PVM_EffPhase1Offset,1,1,[]);
+                        phroll = exp(2*1i*2*pi*bsxfun(@times,line,ph1_offset)/pars.methpars.PVM_Fov(2));
+                        proj = bsxfun(@times,proj,phroll);
+
+                        img = abs(ifftshift(fft(ifftshift(proj,2),[],2),2));
+                    end
+                end
+            end
+
+            img = squeeze(img);
+            labels = {}; % no labels yet
+        end
     end
 end
