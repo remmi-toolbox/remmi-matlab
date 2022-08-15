@@ -74,11 +74,11 @@ if length(matrix) < 3
 end
 
 pe1table = methpars.PVM_EncSteps1;
-pe1table = pe1table+floor(matrix(2)/2)+1;
+pe1table = pe1table+floor(encmatrix(2)/2)+1;
 
 if encmatrix(3) > 1
     pe2table = methpars.PVM_EncSteps2;
-    pe2table = pe2table+floor(matrix(3)/2)+1;
+    pe2table = pe2table+floor(encmatrix(3)/2)+1;
 else
     pe2table = 1;
 end
@@ -177,7 +177,7 @@ data = ifftshift(ifft(ifftshift(proj,1)),1);
 % use phase encode tables
 data = reshape(data,encmatrix(1),encmatrix(2),encmatrix(3),length(echotimes),...
     ncoil,nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps);
-datai = zeros([matrix length(echotimes),ncoil,nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps]);
+datai = zeros([encmatrix length(echotimes),ncoil,nslice,diffImgs,irImgs,mtImgs,bsImgs,nreps]);
 datai(:,pe1table,pe2table,:,:,:,:,:,:,:,:,:) = data;
 
 % reorder slices
@@ -209,15 +209,15 @@ if isfield(methpars,'PVM_EffPhase2Offset')
 end
 
 % PE1 shift
-np = methpars.PVM_Matrix(2);
+np = methpars.PVM_EncMatrix(2);
 line = reshape((1:np) - 1 - round(np/2),1,[]);
-datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)));
+datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph1_offset)/methpars.PVM_Fov(2)/methpars.PVM_AntiAlias(2)));
 
 % PE2 shift
 if length(methpars.PVM_EncMatrix) > 2
     np = methpars.PVM_EncMatrix(3);
     line = reshape((1:np) - 1 - round(np/2),1,1,[]);
-    datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph2_offset)/methpars.PVM_Fov(3)));
+    datai = bsxfun(@times,datai,exp(-1i*2*pi*bsxfun(@times,line,ph2_offset)/methpars.PVM_Fov(3)/methpars.PVM_AntiAlias(3)));
 end
 
 end
