@@ -1,7 +1,7 @@
 function bm = bmatBruker(pp)
 
 
-dt = .004; % time resolution, ms
+dt = .012; % time resolution, ms
 gamma = 42.576; % MHz/T
 te = pp.te(1)*1000; % ms
 tm = 0; % ms
@@ -45,6 +45,16 @@ gdiff = gmax; % pp.methpars.PVM_DwGradAmp*gmax/100; % mT/m
 bigD = pp.methpars.PVM_DwGradSep; % ms
 litD = pp.methpars.PVM_DwGradDur; % ms
 
+if ~isfield(pp.methpars,'REMMI_DwWaveType') || strcmp(pp.methpars.REMMI_DwWaveType,'Pulsed_Gradient')
+    rwave = ones(1,round(litD/dt));
+    pwave = ones(1,round(litD/dt));
+    swave = ones(1,round(litD/dt));
+else
+    rwave = pp.methpars.REMMI_DwWaveR;
+    pwave = pp.methpars.REMMI_DwWaveP;
+    swave = pp.methpars.REMMI_DwWaveS;
+end
+
 for n=1:length(dro)
     t = 0:dt:(te+tm);
     Gr = zeros(size(t));
@@ -63,27 +73,30 @@ for n=1:length(dro)
     Gs(mask) = -gssr;
 
     % read out direction
-    mask = (t>te/2-bigD/2-litD/2+tm/2) & (t<te/2-bigD/2+litD/2+tm/2);
-    Gr(mask) = gdiff*dro(n);
-    mask = (t>te/2+bigD/2-litD/2+tm/2) & (t<te/2+bigD/2+litD/2+tm/2);
-    Gr(mask) = -gdiff*dro(n);
+%     mask = (t>te/2-bigD/2-litD/2+tm/2) & (t<te/2-bigD/2+litD/2+tm/2);
+%     Gr(mask) = gdiff*dro(n).*rwave;
+%     Gp(mask) = gdiff*dpe(n).*rwave;
+%     Gs(mask) = gdiff*dsl(n).*rwave;
+% 
+%     mask = (t>te/2+bigD/2-litD/2+tm/2) & (t<te/2+bigD/2+litD/2+tm/2);
+%     Gr(mask) = -gdiff*dro(n).*rwave;
+%     Gp(mask) = -gdiff*dpe(n).*rwave;
+%     Gs(mask) = -gdiff*dsl(n).*rwave;
 
-    % phase encode direction
-    mask = (t>te/2-bigD/2-litD/2+tm/2) & (t<te/2-bigD/2+litD/2+tm/2);
-    Gp(mask) = +gdiff*dpe(n);
-    mask = (t>te/2+bigD/2-litD/2+tm/2) & (t<te/2+bigD/2+litD/2+tm/2);
-    Gp(mask) = -gdiff*dpe(n);
+    [~,it0] = min(abs(t-(te/2-bigD/2-litD/2+tm/2)));
+    Gr(it0:it0+length(rwave)-1) = gdiff*dro(n).*rwave;
+    Gp(it0:it0+length(rwave)-1) = gdiff*dpe(n).*rwave;
+    Gs(it0:it0+length(rwave)-1) = gdiff*dsl(n).*rwave;
 
-    % slice select direction
-    mask = (t>te/2-bigD/2-litD/2+tm/2) & (t<te/2-bigD/2+litD/2+tm/2);
-    Gs(mask) = gdiff*dsl(n);
-    mask = (t>te/2+bigD/2-litD/2+tm/2) & (t<te/2+bigD/2+litD/2+tm/2);
-    Gs(mask) = -gdiff*dsl(n);
+    [~,it0] = min(abs(t-(te/2+bigD/2-litD/2+tm/2)));
+    Gr(it0:it0+length(rwave)-1) = -gdiff*dro(n).*rwave;
+    Gp(it0:it0+length(rwave)-1) = -gdiff*dpe(n).*rwave;
+    Gs(it0:it0+length(rwave)-1) = -gdiff*dsl(n).*rwave;
 
     G = [Gr;Gp;Gs];
 
-    % plot(G')
-    % pause();
+%     plot(t,G')
+%     pause();
 
     % calculate the b-matrix
     k = cumsum(G,2)*dt*gamma*2*pi/1000; % 1/mm
