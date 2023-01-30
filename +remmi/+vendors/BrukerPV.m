@@ -165,7 +165,12 @@ classdef BrukerPV < handle
             
             % load images
             expPath = fullfile(obj.path,exp);
-            raw = remmi.vendors.loadBruker(expPath,pars.methpars);
+            if contains(pars.methpars.Method,'remmiGRASE')%strcmp(pars.methpars.Method,'<User:remmiGRASE>')
+                % do the GRASE reconstruction
+                raw = remmi.vendors.loadBrukerGrase(expPath,pars.methpars,pars.acqpars);
+            else
+                raw = remmi.vendors.loadBruker(expPath,pars.methpars);
+            end
             
             % partial fourier acquisitions have a large percent of 
             % signals==0
